@@ -32,7 +32,9 @@ export default function Window({
   children: React.ReactNode;
 }) {
   const { state, dispatch } = useWorkstation();
-  const [max, setMax] = useState(false);
+  // Apps open maximised (filling the desktop) by default; the green button or a
+  // double-click on the title bar restores them to a draggable window.
+  const [max, setMax] = useState(true);
   const [pos, setPos] = useState(() => {
     const offset = (spawn++ % 5) * 26;
     return {
