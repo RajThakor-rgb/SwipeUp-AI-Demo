@@ -3,17 +3,18 @@
 // ============================================================================
 // WORKSTATION STATE
 // ----------------------------------------------------------------------------
-// One reducer drives the whole experience: which screen we're on, which panels
-// are open/minimised, which emails have been read, the live dashboard values,
-// the recorded attempts, the comms feed, and the three full-screen interruption
-// beats (onboarding, reaction, debrief). Kept deliberately small and explicit.
+// One reducer drives the whole simulation: the boot/lock/desktop screens, the
+// window manager (open / minimised / focus order for z-index), which emails are
+// read, the live dashboard values, recorded attempts, the comms feed, and the
+// three full-screen interruption beats (onboarding, reaction, debrief).
 // ============================================================================
 
 import React, { createContext, useContext, useReducer } from "react";
 import { METRICS } from "@/config/case";
 import type { Attempt } from "@/lib/types";
 
-export type WindowId = "inbox" | "dashboard" | "claude" | "debrief";
+export type Screen = "portal" | "boot" | "lock" | "desktop";
+export type WindowId = "inbox" | "dashboard" | "claude" | "company";
 export type Interruption = "onboarding" | "reaction" | "debrief" | null;
 
 export interface CommsMessage {
@@ -23,21 +24,17 @@ export interface CommsMessage {
 }
 
 export interface State {
-  screen: "login" | "workstation";
-  /** Open panels and whether each is minimised. */
+  screen: Screen;
   windows: Record<WindowId, { open: boolean; minimized: boolean }>;
-  /** Whether the entry email notification is still showing. */
+  /** Focus order, last = top-most. Drives z-index. */
+  zStack: WindowId[];
   notificationVisible: boolean;
   readEmailIds: string[];
-  /** The task email only appears after onboarding has been read. */
   taskEmailArrived: boolean;
-  /** Live dashboard values, keyed by metric id. */
   metrics: Record<string, number>;
-  /** Has the dashboard been moved at least once (controls trend display). */
   dashboardTouched: boolean;
   attempts: Attempt[];
   comms: CommsMessage[];
-  /** Which full-screen beat is showing, if any. */
   interruption: Interruption;
   reflection: string;
 }
@@ -47,13 +44,14 @@ const initialMetrics: Record<string, number> = Object.fromEntries(
 );
 
 const initialState: State = {
-  screen: "login",
+  screen: "portal",
   windows: {
     inbox: { open: false, minimized: false },
     dashboard: { open: false, minimized: false },
     claude: { open: false, minimized: false },
-    debrief: { open: false, minimized: false },
+    company: { open: false, minimized: false },
   },
+  zStack: [],
   notificationVisible: false,
   readEmailIds: [],
   taskEmailArrived: false,
@@ -66,11 +64,12 @@ const initialState: State = {
 };
 
 export type Action =
-  | { type: "SIGN_IN" }
+  | { type: "SET_SCREEN"; value: Screen }
   | { type: "SHOW_NOTIFICATION" }
   | { type: "OPEN_WINDOW"; id: WindowId }
   | { type: "CLOSE_WINDOW"; id: WindowId }
   | { type: "MINIMIZE_WINDOW"; id: WindowId }
+  | { type: "FOCUS_WINDOW"; id: WindowId }
   | { type: "READ_EMAIL"; id: string }
   | { type: "TASK_EMAIL_ARRIVED" }
   | { type: "SET_INTERRUPTION"; value: Interruption }
@@ -78,10 +77,15 @@ export type Action =
   | { type: "ADD_COMMS"; message: CommsMessage }
   | { type: "SET_REFLECTION"; value: string };
 
+/** Move an id to the top of the focus stack. */
+function raise(stack: WindowId[], id: WindowId): WindowId[] {
+  return [...stack.filter((w) => w !== id), id];
+}
+
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "SIGN_IN":
-      return { ...state, screen: "workstation" };
+    case "SET_SCREEN":
+      return { ...state, screen: action.value };
 
     case "SHOW_NOTIFICATION":
       return { ...state, notificationVisible: true };
@@ -89,13 +93,13 @@ function reducer(state: State, action: Action): State {
     case "OPEN_WINDOW":
       return {
         ...state,
-        // Opening the inbox from its notification dismisses the notification.
         notificationVisible:
           action.id === "inbox" ? false : state.notificationVisible,
         windows: {
           ...state.windows,
           [action.id]: { open: true, minimized: false },
         },
+        zStack: raise(state.zStack, action.id),
       };
 
     case "CLOSE_WINDOW":
@@ -105,6 +109,7 @@ function reducer(state: State, action: Action): State {
           ...state.windows,
           [action.id]: { open: false, minimized: false },
         },
+        zStack: state.zStack.filter((w) => w !== action.id),
       };
 
     case "MINIMIZE_WINDOW":
@@ -115,6 +120,9 @@ function reducer(state: State, action: Action): State {
           [action.id]: { ...state.windows[action.id], minimized: true },
         },
       };
+
+    case "FOCUS_WINDOW":
+      return { ...state, zStack: raise(state.zStack, action.id) };
 
     case "READ_EMAIL":
       return state.readEmailIds.includes(action.id)

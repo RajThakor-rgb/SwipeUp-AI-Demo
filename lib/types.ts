@@ -16,6 +16,8 @@ export interface Metric {
   max: number;
   /** Initial trend shown before any attempt. */
   trend?: "up" | "down" | "flat";
+  /** Historical weekly series for the sparkline / trend chart. */
+  history: number[];
 }
 
 /** One judging criterion shown in the result breakdown. */
@@ -25,17 +27,33 @@ export interface Criterion {
   hint: string;
 }
 
+/** A person in the company directory. */
+export interface Person {
+  name: string;
+  title: string;
+  department: string;
+  initials: string;
+}
+
+/** A department in the org. */
+export interface Department {
+  name: string;
+  lead: string;
+  blurb: string;
+}
+
 /** An email in the inbox. Locked emails tease future tools — they cannot open. */
 export interface EmailConfig {
   id: string;
   from: string;
+  department: string;
   subject: string;
   preview: string;
-  /** Markdown-ish plain body. Undefined for locked/teaser emails. */
+  /** Plain body. Undefined for locked/teaser emails. */
   body?: string;
   /** Locked teaser email for a future tool — visible but not openable. */
   locked?: boolean;
-  /** If present, opening this email reveals a link that opens the named tool/panel. */
+  /** If present, opening this email reveals a link that opens the dashboard. */
   opensDashboard?: boolean;
   /** Emails that arrive after onboarding is read, rather than on entry. */
   arrivesAfterOnboarding?: boolean;
@@ -45,10 +63,8 @@ export interface EmailConfig {
 export interface ToolConfig {
   id: string;
   name: string;
-  /** Single-character or short glyph used on the desktop icon. */
   glyph: string;
   tagline: string;
-  /** Whether this tool is wired up. Locked tools show as "coming soon". */
   enabled: boolean;
 }
 

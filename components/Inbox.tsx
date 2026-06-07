@@ -1,8 +1,8 @@
 "use client";
 
-// Full-screen inbox. One unread onboarding email, a task email that arrives
-// after onboarding is read, and locked teaser emails for future tools that
-// cannot be opened.
+// The company mail client. An unread HR onboarding email (the onboarding beat),
+// a welcome note from the MD, the Marketing task that arrives after onboarding,
+// and locked teaser emails for future tools that cannot be opened.
 
 import { useState } from "react";
 import { EMAILS } from "@/config/case";
@@ -13,7 +13,6 @@ export default function Inbox() {
   const { state, dispatch } = useWorkstation();
   const [selected, setSelected] = useState<string | null>(null);
 
-  // Build the visible list: hide the task email until it has "arrived".
   const visible = EMAILS.filter(
     (e) => !e.arrivesAfterOnboarding || state.taskEmailArrived,
   );
@@ -21,9 +20,6 @@ export default function Inbox() {
   function selectEmail(id: string, locked?: boolean) {
     if (locked) return;
     setSelected(id);
-
-    // Opening the onboarding email for the first time is the full-screen
-    // onboarding beat. Subsequent opens just show it in the reading pane.
     if (id === "onboarding" && !state.readEmailIds.includes("onboarding")) {
       dispatch({ type: "READ_EMAIL", id });
       dispatch({ type: "SET_INTERRUPTION", value: "onboarding" });
@@ -35,10 +31,10 @@ export default function Inbox() {
   const current = visible.find((e) => e.id === selected) ?? null;
 
   return (
-    <Window id="inbox" title="Inbox" glyph="✉" sizeClass="size-inbox">
+    <Window id="inbox" title="Mail" glyph="✉" width={840} height={600}>
       <div className="inbox">
         <div className="inbox-list">
-          <div className="inbox-head">Mail</div>
+          <div className="inbox-head">Inbox</div>
           {visible.map((email) => {
             const unread =
               !email.locked && !state.readEmailIds.includes(email.id);
@@ -53,10 +49,9 @@ export default function Inbox() {
               >
                 <div className="mail-from">
                   <span>{email.from}</span>
-                  {email.locked ? (
-                    <span className="lock-tag">🔒 locked</span>
-                  ) : null}
+                  {email.locked ? <span className="lock-tag">🔒</span> : null}
                 </div>
+                <div className="mail-dept">{email.department}</div>
                 <div className="mail-subject">
                   {unread ? <span className="unread-dot" /> : null}
                   {email.subject}
@@ -69,13 +64,27 @@ export default function Inbox() {
 
         {current && current.body ? (
           <div className="mail-read">
-            <div className="r-from">From: {current.from}</div>
             <div className="r-subject">{current.subject}</div>
+            <div className="r-meta">
+              <span className="r-avatar">
+                {current.from
+                  .split(" ")
+                  .map((p) => p[0])
+                  .join("")
+                  .slice(0, 2)}
+              </span>
+              <div>
+                <div className="r-from">{current.from}</div>
+                <div className="r-dept">{current.department}</div>
+              </div>
+            </div>
             <div className="r-body">{renderBody(current.body)}</div>
             {current.opensDashboard ? (
               <button
                 className="dash-link"
-                onClick={() => dispatch({ type: "OPEN_WINDOW", id: "dashboard" })}
+                onClick={() =>
+                  dispatch({ type: "OPEN_WINDOW", id: "dashboard" })
+                }
               >
                 Open the marketing dashboard →
               </button>
@@ -89,8 +98,6 @@ export default function Inbox() {
   );
 }
 
-// Render the body, turning the "[Open the marketing dashboard]" placeholder
-// line into nothing (the real button is rendered separately below the body).
 function renderBody(body: string) {
   return body
     .split("\n")

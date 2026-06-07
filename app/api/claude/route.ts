@@ -24,7 +24,6 @@ import {
   METRICS,
   MODEL,
   SITUATION,
-  TASK,
   VOICE_RULES,
 } from "@/config/case";
 import type { Judgment } from "@/lib/types";
@@ -42,72 +41,15 @@ function hasApiKey(): boolean {
 
 // ---- JSON schema the judge must return (structured outputs) ----------------
 
-const criterionSchema = {
-  type: "object",
-  properties: {
-    score: { type: "integer", description: "0 (poor) to 10 (excellent)" },
-    reason: { type: "string", description: "One short line explaining the score." },
-  },
-  required: ["score", "reason"],
-  additionalProperties: false,
-};
-
-const metricDeltaSchema = {
-  type: "object",
-  properties: {
-    delta: {
-      type: "number",
-      description:
-        "Change to apply to this metric. Can be negative. A weak attempt moves little or down; a strong attempt lifts it.",
-    },
-    reason: { type: "string", description: "One short line for the move." },
-  },
-  required: ["delta", "reason"],
-  additionalProperties: false,
-};
-
-const judgeSchema = {
-  type: "object",
-  properties: {
-    band: {
-      type: "string",
-      enum: ["weak", "middling", "strong"],
-      description: "Overall quality band for the email.",
-    },
-    criteria: {
-      type: "object",
-      properties: Object.fromEntries(
-        CRITERIA.map((c) => [c.id, criterionSchema]),
-      ),
-      required: CRITERIA.map((c) => c.id),
-      additionalProperties: false,
-    },
-    metrics: {
-      type: "object",
-      properties: Object.fromEntries(
-        METRICS.map((m) => [m.id, metricDeltaSchema]),
-      ),
-      required: METRICS.map((m) => m.id),
-      additionalProperties: false,
-    },
-  },
-  required: ["band", "criteria", "metrics"],
-  additionalProperties: false,
-};
-
-const generateSchema = {
-  type: "object",
-  properties: {
-    subject: { type: "string", description: "The email subject line." },
-    body: { type: "string", description: "The email body. Short." },
-  },
-  required: ["subject", "body"],
-  additionalProperties: false,
-};
-
 // ---- Prompts ---------------------------------------------------------------
+// The two calls are constrained by explicit JSON-shape instructions and parsed
+// defensively (see extractJson). We deliberately depend only on the core
+// Messages API — no preview parameters that could 400 in a live demo.
 
-const GENERATE_SYSTEM = `You are Claude, the AI tool that ${COMPANY.legalName} runs its marketing copy through. You produce campaign copy on demand. You follow the brief you are given exactly — if the brief is vague, the output will be generic; if the brief is specific, the output will be sharp. Do not add commentary. Return only the email as structured JSON (subject and body).`;
+const GENERATE_SYSTEM = `You are Claude, the AI tool that ${COMPANY.legalName} runs its marketing copy through. You produce campaign copy on demand. You follow the brief you are given exactly — if the brief is vague, the output will be generic; if the brief is specific, the output will be sharp.
+
+Return ONLY a JSON object. No commentary, no explanation, no markdown, no code fences. Exactly this shape:
+{"subject": "<the email subject line>", "body": "<the short email body, plain text, line breaks allowed>"}`;
 
 function generateUser(studentPrompt: string): string {
   return `A marketing associate has written the following prompt to brief you for an email. Follow it faithfully — including its weaknesses. Do not silently improve a vague brief.
@@ -140,7 +82,18 @@ Rules for the move, do not break them:
 - Pressing submit must never guarantee a rise. If the email is bad, the numbers fall.
 - Be consistent: the same email should always earn roughly the same scores.
 
-Set band to "weak", "middling", or "strong" to match the overall quality. Return strict JSON only.`;
+Set band to "weak", "middling", or "strong" to match the overall quality.
+
+Return ONLY a JSON object. No commentary, no markdown, no code fences. Exactly this shape:
+{
+  "band": "weak" | "middling" | "strong",
+  "criteria": {
+    ${CRITERIA.map((c) => `"${c.id}": { "score": <integer 0-10>, "reason": "<one short line>" }`).join(",\n    ")}
+  },
+  "metrics": {
+    ${METRICS.map((m) => `"${m.id}": { "delta": <number, may be negative>, "reason": "<one short line>" }`).join(",\n    ")}
+  }
+}`;
 
 function judgeUser(subject: string, body: string): string {
   return `Evaluate this autumn launch email.
@@ -182,38 +135,34 @@ export async function POST(request: Request) {
 
   try {
     // ---- Call 1: GENERATE the email from the student's prompt -------------
+    // We instruct strict JSON in the system prompt and parse defensively, so
+    // the loop can't break on a stray code fence or preamble.
     const genResp = await client.messages.create({
       model: MODEL,
       max_tokens: 1200,
-      temperature: 0.8, // a little room so prompt quality visibly changes the output
-      thinking: { type: "disabled" },
+      temperature: 0.7, // a little room so prompt quality visibly changes the output
       system: GENERATE_SYSTEM,
       messages: [{ role: "user", content: generateUser(prompt) }],
-      output_config: {
-        format: { type: "json_schema", schema: generateSchema },
-      },
-    } as Anthropic.MessageCreateParamsNonStreaming);
+    });
 
-    const genText = firstText(genResp);
-    const email = JSON.parse(genText) as { subject: string; body: string };
+    const email = extractJson<{ subject: string; body: string }>(
+      firstText(genResp),
+    );
 
     // ---- Call 2: JUDGE the generated email -------------------------------
     const judgeResp = await client.messages.create({
       model: MODEL,
       max_tokens: 1200,
       temperature: 0, // stable, repeatable judging
-      thinking: { type: "disabled" },
       system: JUDGE_SYSTEM,
       messages: [
         { role: "user", content: judgeUser(email.subject, email.body) },
       ],
-      output_config: {
-        format: { type: "json_schema", schema: judgeSchema },
-      },
-    } as Anthropic.MessageCreateParamsNonStreaming);
+    });
 
-    const judgeText = firstText(judgeResp);
-    const judgment = JSON.parse(judgeText) as Judgment;
+    const judgment = normalizeJudgment(
+      extractJson<Judgment>(firstText(judgeResp)),
+    );
 
     return NextResponse.json({ configured: true, email, judgment });
   } catch (err) {
@@ -237,4 +186,64 @@ function firstText(resp: Anthropic.Message): string {
     if (block.type === "text") return block.text;
   }
   throw new Error("No text block in model response.");
+}
+
+/**
+ * Parse JSON out of model text defensively: direct parse, then strip a markdown
+ * code fence, then fall back to the first balanced { ... } slice. This makes the
+ * loop robust even if the model wraps its JSON or adds a stray word.
+ */
+function extractJson<T>(text: string): T {
+  const t = text.trim();
+  try {
+    return JSON.parse(t) as T;
+  } catch {
+    /* try the next strategy */
+  }
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) {
+    try {
+      return JSON.parse(fence[1].trim()) as T;
+    } catch {
+      /* try the next strategy */
+    }
+  }
+  const start = t.indexOf("{");
+  const end = t.lastIndexOf("}");
+  if (start !== -1 && end > start) {
+    return JSON.parse(t.slice(start, end + 1)) as T;
+  }
+  throw new Error("Could not parse JSON from model output.");
+}
+
+/**
+ * Harden the judge output: guarantee every criterion and every metric is
+ * present and well-typed, and the band is valid. The dashboard can then render
+ * without any chance of NaN or undefined.
+ */
+function normalizeJudgment(raw: Judgment): Judgment {
+  const band: Judgment["band"] =
+    raw?.band === "weak" || raw?.band === "strong" ? raw.band : "middling";
+
+  const criteria: Judgment["criteria"] = {};
+  for (const c of CRITERIA) {
+    const r = raw?.criteria?.[c.id];
+    const score = Math.max(0, Math.min(10, Math.round(Number(r?.score) || 0)));
+    criteria[c.id] = {
+      score,
+      reason: typeof r?.reason === "string" ? r.reason : "",
+    };
+  }
+
+  const metrics: Judgment["metrics"] = {};
+  for (const m of METRICS) {
+    const r = raw?.metrics?.[m.id];
+    const delta = Number(r?.delta);
+    metrics[m.id] = {
+      delta: Number.isFinite(delta) ? delta : 0,
+      reason: typeof r?.reason === "string" ? r.reason : "",
+    };
+  }
+
+  return { band, criteria, metrics };
 }
