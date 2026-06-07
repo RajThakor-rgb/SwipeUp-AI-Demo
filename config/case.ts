@@ -18,7 +18,7 @@ import type {
 /** The Claude model used by the result engine. Confirmed current Sonnet model. */
 export const MODEL = "claude-sonnet-4-6";
 
-/** Academic framing — the student reaches the simulation through their university. */
+/** Academic framing, the student reaches the simulation through their university. */
 export const UNIVERSITY = {
   name: "University of Law",
   programme: "SwipeUp AI Academy",
@@ -32,7 +32,7 @@ export const COMPANY = {
   founded: 2019,
   hq: "London, UK",
   blurb:
-    "Velara is a UK sustainable luxury fashion house, founded in 2019. It runs two boutiques — Mayfair and Knightsbridge — plus a growing website. Collections are small-batch, made from certified materials, and sold at a high price point to a discerning clientele.",
+    "Velara is a UK sustainable luxury fashion house, founded in 2019. It runs two boutiques, in Mayfair and Knightsbridge, plus a growing website. Collections are small-batch, made from certified materials, and sold at a high price point to a discerning clientele.",
   newHire: {
     name: "Raj",
     role: "Marketing Associate",
@@ -40,7 +40,7 @@ export const COMPANY = {
   },
 };
 
-/** The voice rules — used in copy, in the tool's hint, and in the judge prompt. */
+/** The voice rules, used in copy, in the tool's hint, and in the judge prompt. */
 export const VOICE_RULES =
   "understated, specific, sustainability-led, no hype words";
 
@@ -180,7 +180,7 @@ export const ANALYTICS = {
     { name: "New Season Teaser", sent: "02 Jun", open: "16%", ctr: "0.9%", status: "Poor" },
   ],
   insight:
-    "Open and click rates have slid for six straight campaigns. The biggest untapped group is lapsed customers (46%) — people who bought once and drifted. They stopped opening because the emails stopped sounding like Velara.",
+    "Open and click rates have slid for six straight campaigns. The biggest untapped group is lapsed customers (46%), people who bought once and drifted. They stopped opening because the emails stopped sounding like Velara.",
 };
 
 // ---- Judging criteria ---------------------------------------------------
@@ -200,19 +200,19 @@ export const EMAILS: EmailConfig[] = [
     id: "onboarding",
     from: PEOPLE.hr.name,
     department: PEOPLE.hr.department,
-    subject: "Welcome to Velara — your first week",
-    preview: "Welcome to the team, Raj. Here's everything you need to find your feet…",
+    subject: "Welcome to Velara: your first week",
+    preview: "Welcome to the team, Raj. Here's everything you need to find your feet.",
     body: `Hi Raj,
 
 Welcome to Velara, and welcome to the Marketing team. I'm Hannah, I look after People & Culture, so I'm your first port of call this week.
 
-A bit about us, so you know where you've landed. Velara is a sustainable luxury fashion house, founded in 2019. We have two boutiques — Mayfair and Knightsbridge — and a website that's becoming a bigger part of the business every season. Our collections are small-batch and made from certified materials, and our clients pay a premium because they trust what we stand for: quality that lasts, made responsibly.
+A bit about us, so you know where you've landed. Velara is a sustainable luxury fashion house, founded in 2019. We have two boutiques, in Mayfair and Knightsbridge, and a website that's becoming a bigger part of the business every season. Our collections are small-batch and made from certified materials, and our clients pay a premium because they trust what we stand for: quality that lasts, made responsibly.
 
-How the company is set up. ${PEOPLE.md.name} (${PEOPLE.md.title}) runs the company and sets the strategy. You'll report into ${PEOPLE.marketing.name}, our ${PEOPLE.marketing.title} — she owns the brand voice and every campaign that goes out. Operations and Customer Experience sit alongside us. You can see the whole org in the Company app on your desktop.
+How the company is set up. ${PEOPLE.md.name} (${PEOPLE.md.title}) runs the company and sets the strategy. You'll report into ${PEOPLE.marketing.name}, our ${PEOPLE.marketing.title}. She owns the brand voice and every campaign that goes out. Operations and Customer Experience sit alongside us. You can see the whole org in the Company app on your desktop.
 
-How we work day to day. We run all our copy and campaign work through Claude, our company AI tool — it's on your desktop. Claude does the production. Your job is to direct it well and judge what comes back, because a tool is only as good as the brief it's given. Our brand guidelines are simple but strict: ${VOICE_RULES}.
+How we work day to day. We run all our copy and campaign work through Claude, our company AI tool, and it's on your desktop. Claude does the production. Your job is to direct it well and judge what comes back, because a tool is only as good as the brief it's given. Our brand guidelines are simple but strict: ${VOICE_RULES}.
 
-Priya will be in touch shortly with your first piece of work. Take a look around the desktop first — open the Company app to get your bearings, and the Marketing Dashboard to see how our campaigns are doing.
+Priya will be in touch shortly with your first piece of work. Take a look around the desktop first. Open the Company app to get your bearings, and the Marketing Dashboard to see how our campaigns are doing.
 
 Glad to have you with us.
 
@@ -229,7 +229,7 @@ Head of People & Culture`,
 
 A quick hello from me. I don't email every new joiner, but Marketing matters to me right now, so I wanted to.
 
-Velara is in good shape in our boutiques — in person, our team is exceptional. Online is where we're losing ground. Our emails have stopped sounding like us, and the numbers show it. This autumn launch is the moment to turn that around.
+Velara is in good shape in our boutiques. In person, our team is exceptional. Online is where we're losing ground. Our emails have stopped sounding like us, and the numbers show it. This autumn launch is the moment to turn that around.
 
 You're closer to the work than I am, so I'll stay out of the detail. But know that what your team produces this season has my full attention.
 
@@ -240,13 +240,13 @@ Managing Director`,
     id: "task",
     from: PEOPLE.marketing.name,
     department: PEOPLE.marketing.department,
-    subject: "Your first job — autumn launch email",
-    preview: "Straight in at the deep end. Our autumn collection drops soon…",
+    subject: "Your first job: autumn launch email",
+    preview: "Straight in at the deep end. Our autumn collection drops soon.",
     arrivesAfterOnboarding: true,
     opensDashboard: true,
     body: `Hi Raj,
 
-Straight in at the deep end — that's how we learn here.
+Straight in at the deep end. That's how we learn here.
 
 Our autumn collection drops soon and I need the launch email written. A subject line and a short body, aimed at customers who bought from us once over a year ago and then drifted away. It has to sound like us, not like every other luxury brand shouting about a sale. Stick to the voice rules: ${VOICE_RULES}.
 
@@ -254,7 +254,7 @@ Before you start, look at where our campaigns actually are right now.
 
 [Open the marketing dashboard]
 
-It's not pretty — open and click rates have been sliding for months. That's exactly why you're here. Draft it in Claude, and I'll review what you produce.
+It's not pretty. Open and click rates have been sliding for months. That's exactly why you're here. Draft it in Claude, and I'll review what you produce.
 
 Priya Anand
 Marketing Director`,
@@ -282,7 +282,7 @@ Marketing Director`,
 
 export const MANAGER_REACTIONS: Record<"weak" | "middling" | "strong", string> =
   {
-    weak: "This still reads like every other luxury brand. A lapsed customer wouldn't feel spoken to, and the team flagged the voice. Take another pass — be more specific, and drop the hype words.",
+    weak: "This still reads like every other luxury brand. A lapsed customer wouldn't feel spoken to, and the team flagged the voice. Take another pass. Be more specific, and drop the hype words.",
     middling:
       "Better. It's starting to sound like us and the open rate nudged up. It's still a bit generic in places. See if you can make it feel personal to someone who bought once and drifted.",
     strong:

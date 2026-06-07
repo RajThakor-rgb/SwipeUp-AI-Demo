@@ -545,6 +545,11 @@ kbd {
   pointer-events: none;
 }
 .comms-msg {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
   background: var(--paper-2);
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
@@ -552,7 +557,17 @@ kbd {
   padding: 11px 13px;
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
   pointer-events: auto;
+  cursor: pointer;
   animation: slideIn 0.35s ease;
+}
+.comms-msg.leaving {
+  animation: commsOut 0.5s ease forwards;
+}
+@keyframes commsOut {
+  to {
+    opacity: 0;
+    transform: translateX(14px);
+  }
 }
 .cm-from {
   font-size: 11px;
@@ -589,6 +604,16 @@ kbd {
     opacity: 1;
     transform: scale(1);
   }
+}
+.window.maximized {
+  top: 8px !important;
+  left: 10px !important;
+  right: 10px !important;
+  bottom: 80px !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
 }
 .window-bar {
   height: 38px;

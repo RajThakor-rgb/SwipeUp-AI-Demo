@@ -75,6 +75,7 @@ export type Action =
   | { type: "SET_INTERRUPTION"; value: Interruption }
   | { type: "RECORD_ATTEMPT"; attempt: Attempt }
   | { type: "ADD_COMMS"; message: CommsMessage }
+  | { type: "REMOVE_COMMS"; id: string }
   | { type: "SET_REFLECTION"; value: string };
 
 /** Move an id to the top of the focus stack. */
@@ -145,6 +146,12 @@ function reducer(state: State, action: Action): State {
 
     case "ADD_COMMS":
       return { ...state, comms: [...state.comms, action.message] };
+
+    case "REMOVE_COMMS":
+      return {
+        ...state,
+        comms: state.comms.filter((m) => m.id !== action.id),
+      };
 
     case "SET_REFLECTION":
       return { ...state, reflection: action.value };

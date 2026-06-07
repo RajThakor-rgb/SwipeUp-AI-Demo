@@ -1,7 +1,7 @@
 "use client";
 
 // Small, dependency-free SVG charts so the dashboard reads like a real
-// analytics backend. Deliberately lightweight — no chart library.
+// analytics backend. Deliberately lightweight, no chart library.
 
 export function AreaChart({
   data,

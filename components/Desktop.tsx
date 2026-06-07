@@ -5,9 +5,14 @@
 // a quiet comms feed, and whichever windows are open. The shell stays put while
 // the work inside it changes.
 
+import { useEffect, useState } from "react";
 import { COMPANY } from "@/config/case";
 import { TOOLS } from "@/config/tools";
-import { useWorkstation, type WindowId } from "@/lib/state";
+import {
+  useWorkstation,
+  type CommsMessage,
+  type WindowId,
+} from "@/lib/state";
 import { useClock } from "@/lib/useClock";
 import ClaudeTool from "./ClaudeTool";
 import Company from "./Company";
@@ -82,18 +87,15 @@ export default function Desktop() {
         {state.notificationVisible ? (
           <button className="toast" onClick={() => open("inbox")}>
             <div className="toast-from">New email · Human Resources</div>
-            <div className="toast-subject">Welcome to Velara — your first week</div>
+            <div className="toast-subject">Welcome to Velara: your first week</div>
             <div className="toast-cta">Open Mail →</div>
           </button>
         ) : null}
 
-        {/* Comms feed */}
+        {/* Comms feed, each message behaves like a notification and auto-dismisses */}
         <div className="comms">
           {state.comms.map((m) => (
-            <div className="comms-msg" key={m.id}>
-              <div className="cm-from">{m.from}</div>
-              <div className="cm-text">{m.text}</div>
-            </div>
+            <CommsItem key={m.id} message={m} />
           ))}
         </div>
 
@@ -122,5 +124,34 @@ export default function Desktop() {
         })}
       </div>
     </div>
+  );
+}
+
+/** A single comms notification: auto-dismisses after a few seconds, or on click. */
+function CommsItem({ message }: { message: CommsMessage }) {
+  const { dispatch } = useWorkstation();
+  const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    const fade = setTimeout(() => setLeaving(true), 7000);
+    const remove = setTimeout(
+      () => dispatch({ type: "REMOVE_COMMS", id: message.id }),
+      7500,
+    );
+    return () => {
+      clearTimeout(fade);
+      clearTimeout(remove);
+    };
+  }, [dispatch, message.id]);
+
+  return (
+    <button
+      className={`comms-msg ${leaving ? "leaving" : ""}`}
+      onClick={() => dispatch({ type: "REMOVE_COMMS", id: message.id })}
+      title="Dismiss"
+    >
+      <div className="cm-from">{message.from}</div>
+      <div className="cm-text">{message.text}</div>
+    </button>
   );
 }

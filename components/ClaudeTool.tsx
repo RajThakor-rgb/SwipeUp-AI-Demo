@@ -1,10 +1,10 @@
 "use client";
 
-// The Claude tool — a simple branded company panel (not a claude.ai clone).
+// The Claude tool, a simple branded company panel (not a claude.ai clone).
 // The associate briefs Claude, generates a draft, and the result engine runs
 // two server-side calls (generate, then judge). On success we record the draft,
 // move the dashboard, drop a human-voiced note from Priya into comms, and
-// trigger the reaction beat. Framed as real company work — no "attempt" scoring.
+// trigger the reaction beat. Framed as real company work, no "attempt" scoring.
 
 import { useState } from "react";
 import { COMPANY, MANAGER_REACTIONS, METRICS, PEOPLE, TASK } from "@/config/case";

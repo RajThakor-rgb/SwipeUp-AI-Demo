@@ -1,6 +1,6 @@
 "use client";
 
-// The Company app — the new hire's orientation. What Velara is, the situation,
+// The Company app, the new hire's orientation. What Velara is, the situation,
 // the org structure and who runs what, and the brand voice rules. This is what
 // gives the "I understand how this business works" footing before the task.
 
@@ -48,7 +48,7 @@ export default function Company() {
         </div>
 
         <div className="co-section">
-          <h3>Brand voice — non-negotiable</h3>
+          <h3>Brand voice: non-negotiable</h3>
           <div className="co-voice">{VOICE_RULES}</div>
           <p className="co-fine">
             Every word that leaves Velara follows these rules. They are how a

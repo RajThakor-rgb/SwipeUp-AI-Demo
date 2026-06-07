@@ -1,6 +1,6 @@
 "use client";
 
-// Boot splash — the "starting a laptop" moment between the university portal
+// Boot splash, the "starting a laptop" moment between the university portal
 // and the OS lock screen.
 
 import { useEffect } from "react";

@@ -1,4 +1,4 @@
-# SwipeUp AI Academy — Velara demo
+# SwipeUp AI Academy, Velara demo
 
 > Deployed on Vercel with the Next.js framework preset (see `vercel.json`).
 
@@ -16,8 +16,8 @@ tool (Claude, for prompt engineering)** running the complete learning loop:
 Every attempt runs **two Claude calls**, server-side, in
 [`app/api/claude/route.ts`](app/api/claude/route.ts):
 
-1. **Generate** — turns the student's prompt into an actual launch email.
-2. **Judge** — scores that email against fixed criteria and returns **strict
+1. **Generate**, turns the student's prompt into an actual launch email.
+2. **Judge**, scores that email against fixed criteria and returns **strict
    JSON** (structured outputs): a score + reason per criterion, plus a change
    to each dashboard metric, plus an overall band.
 
@@ -58,11 +58,11 @@ the API key once:
 
 The shell is **tool-agnostic**. A future tool (the locked "Customer Chatbot"
 and "Automation" teaser emails) is a new entry in `config/tools.ts` plus an
-email in `config/case.ts` — not a rebuild. The result engine, dashboard, comms,
+email in `config/case.ts`, not a rebuild. The result engine, dashboard, comms,
 and the three interruption beats (onboarding, reaction, debrief) are shared.
 
 ## Stack
 
 Next.js (App Router) · TypeScript · `@anthropic-ai/sdk` · plain CSS. No auth
-(login is visual only). Panels open/close/minimise — not a draggable window
+(login is visual only). Panels open/close/minimise, not a draggable window
 manager, by design.

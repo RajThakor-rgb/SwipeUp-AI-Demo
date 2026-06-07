@@ -2,7 +2,7 @@
 
 // A draggable, focusable desktop window: drag by the title bar, click to bring
 // to front, close / minimise from the traffic-light buttons. Not a heavyweight
-// window manager — just enough to feel like a real OS desktop.
+// window manager, just enough to feel like a real OS desktop.
 
 import { useEffect, useRef, useState } from "react";
 import type { WindowId } from "@/lib/state";
@@ -32,6 +32,7 @@ export default function Window({
   children: React.ReactNode;
 }) {
   const { state, dispatch } = useWorkstation();
+  const [max, setMax] = useState(false);
   const [pos, setPos] = useState(() => {
     const offset = (spawn++ % 5) * 26;
     return {
@@ -69,20 +70,29 @@ export default function Window({
   }, [width]);
 
   function startDrag(e: React.PointerEvent) {
+    if (max) return; // a maximised window doesn't drag
     drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y };
     document.body.style.userSelect = "none";
     dispatch({ type: "FOCUS_WINDOW", id });
   }
 
+  const style = max
+    ? { zIndex: z }
+    : { left: pos.x, top: pos.y, width, height, zIndex: z };
+
   return (
     <div
-      className="window"
+      className={`window ${max ? "maximized" : ""}`}
       role="dialog"
       aria-label={title}
-      style={{ left: pos.x, top: pos.y, width, height, zIndex: z }}
+      style={style}
       onPointerDown={() => dispatch({ type: "FOCUS_WINDOW", id })}
     >
-      <div className="window-bar" onPointerDown={startDrag}>
+      <div
+        className="window-bar"
+        onPointerDown={startDrag}
+        onDoubleClick={() => setMax((m) => !m)}
+      >
         <span className="win-dots">
           <button
             className="win-dot close"
@@ -99,7 +109,13 @@ export default function Window({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => dispatch({ type: "MINIMIZE_WINDOW", id })}
           />
-          <span className="win-dot full" />
+          <button
+            className="win-dot full"
+            title={max ? "Restore" : "Maximise"}
+            aria-label={max ? "Restore" : "Maximise"}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => setMax((m) => !m)}
+          />
         </span>
         <span className="title">
           {glyph ? <span aria-hidden>{glyph}</span> : null}

@@ -1,7 +1,7 @@
 "use client";
 
 // OS-style lock screen: wallpaper, live clock, the user (Raj) and a password
-// field. Visual only — any password (or just Enter) signs in. On unlock the
+// field. Visual only, any password (or just Enter) signs in. On unlock the
 // desktop loads and the first email notification lands a beat later.
 
 import { useEffect, useState } from "react";

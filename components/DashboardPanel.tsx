@@ -1,6 +1,6 @@
 "use client";
 
-// The marketing analytics backend — built to read like a real BI dashboard.
+// The marketing analytics backend, built to read like a real BI dashboard.
 // KPI tiles with sparklines and trends, a main trend chart that projects the
 // move from the latest draft, channel + audience breakdowns, a campaigns table,
 // and the headline problem spelled out. After a draft is judged, the deltas and

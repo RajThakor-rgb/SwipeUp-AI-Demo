@@ -1,6 +1,6 @@
 "use client";
 
-// The three full-screen beats that blur everything else — reserved, per the
+// The three full-screen beats that blur everything else, reserved, per the
 // brief, for exactly: onboarding, the reaction after a draft, and the debrief.
 // Everything else lives quietly in comms.
 
@@ -35,7 +35,7 @@ function Onboarding() {
   const { dispatch } = useWorkstation();
   const email = EMAILS.find((e) => e.id === "onboarding")!;
 
-  // While they read, the task email arrives softly — a comms ping plus a new
+  // While they read, the task email arrives softly, a comms ping plus a new
   // unread email in the inbox. It never blocks the onboarding read.
   useEffect(() => {
     const t = setTimeout(() => {
@@ -65,7 +65,7 @@ function Onboarding() {
           className="btn dark"
           onClick={() => dispatch({ type: "SET_INTERRUPTION", value: null })}
         >
-          Got it — let&apos;s go
+          Got it, let&apos;s go
         </button>
       </div>
     </>

@@ -42,7 +42,7 @@ export interface Department {
   blurb: string;
 }
 
-/** An email in the inbox. Locked emails tease future tools — they cannot open. */
+/** An email in the inbox. Locked emails tease future tools, they cannot open. */
 export interface EmailConfig {
   id: string;
   from: string;
@@ -51,7 +51,7 @@ export interface EmailConfig {
   preview: string;
   /** Plain body. Undefined for locked/teaser emails. */
   body?: string;
-  /** Locked teaser email for a future tool — visible but not openable. */
+  /** Locked teaser email for a future tool, visible but not openable. */
   locked?: boolean;
   /** If present, opening this email reveals a link that opens the dashboard. */
   opensDashboard?: boolean;

@@ -1,6 +1,6 @@
 "use client";
 
-// University portal — the academic framing (CESIM-style: you reach the
+// University portal, the academic framing (CESIM-style: you reach the
 // simulation through your university). Launching here also requests real
 // fullscreen so the rest feels like a dedicated machine, not a browser tab.
 
@@ -11,11 +11,11 @@ export default function Portal() {
   const { dispatch } = useWorkstation();
 
   async function launch() {
-    // Fullscreen must be triggered by a user gesture — this click qualifies.
+    // Fullscreen must be triggered by a user gesture, this click qualifies.
     try {
       await document.documentElement.requestFullscreen?.();
     } catch {
-      /* some browsers/embeds block it — carry on regardless */
+      /* some browsers/embeds block it, carry on regardless */
     }
     dispatch({ type: "SET_SCREEN", value: "boot" });
   }
@@ -33,7 +33,7 @@ export default function Portal() {
         <p className="portal-lead">
           You are about to enter a live business simulation. You will join a
           company as a new hire, receive a real brief, and use the company&apos;s
-          AI tools to do the work — then watch the business respond.
+          AI tools to do the work, then watch the business respond.
         </p>
 
         <label className="portal-field">

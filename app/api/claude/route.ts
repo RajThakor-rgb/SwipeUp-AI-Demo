@@ -1,14 +1,14 @@
 // ============================================================================
-// THE RESULT ENGINE  —  server-side, the heart of the product
+// THE RESULT ENGINE ,  server-side, the heart of the product
 // ----------------------------------------------------------------------------
 // One POST per attempt runs TWO Claude calls:
-//   1. GENERATE — turn the student's prompt into an actual launch email.
-//   2. JUDGE    — score that email against fixed criteria and return strict
+//   1. GENERATE, turn the student's prompt into an actual launch email.
+//   2. JUDGE   , score that email against fixed criteria and return strict
 //                 JSON: a score + one-line reason per criterion, plus a change
 //                 (delta) to each dashboard metric, plus an overall band.
 //
 // The judge is kept stable: fixed criteria baked into the system prompt,
-// temperature 0, and structured outputs so the JSON is guaranteed parseable —
+// temperature 0, and structured outputs so the JSON is guaranteed parseable , 
 // no prose, no markdown fences, no brittle hand-parsing.
 //
 // The API key is read ONLY here, from the environment. It never touches the
@@ -30,7 +30,7 @@ import type { Judgment } from "@/lib/types";
 
 // Run on the Node.js runtime (the Anthropic SDK expects it).
 export const runtime = "nodejs";
-// Never cache attempts — every prompt is fresh.
+// Never cache attempts, every prompt is fresh.
 export const dynamic = "force-dynamic";
 
 /** True only when a real-looking key is present. */
@@ -44,15 +44,17 @@ function hasApiKey(): boolean {
 // ---- Prompts ---------------------------------------------------------------
 // The two calls are constrained by explicit JSON-shape instructions and parsed
 // defensively (see extractJson). We deliberately depend only on the core
-// Messages API — no preview parameters that could 400 in a live demo.
+// Messages API, no preview parameters that could 400 in a live demo.
 
-const GENERATE_SYSTEM = `You are Claude, the AI tool that ${COMPANY.legalName} runs its marketing copy through. You produce campaign copy on demand. You follow the brief you are given exactly — if the brief is vague, the output will be generic; if the brief is specific, the output will be sharp.
+const GENERATE_SYSTEM = `You are Claude, the AI tool that ${COMPANY.legalName} runs its marketing copy through. You produce campaign copy on demand. You follow the brief you are given exactly. If the brief is vague, the output will be generic; if the brief is specific, the output will be sharp.
+
+Never use em dashes. Write with commas, full stops, or colons instead. Avoid hype words and marketing buzzwords.
 
 Return ONLY a JSON object. No commentary, no explanation, no markdown, no code fences. Exactly this shape:
 {"subject": "<the email subject line>", "body": "<the short email body, plain text, line breaks allowed>"}`;
 
 function generateUser(studentPrompt: string): string {
-  return `A marketing associate has written the following prompt to brief you for an email. Follow it faithfully — including its weaknesses. Do not silently improve a vague brief.
+  return `A marketing associate has written the following prompt to brief you for an email. Follow it faithfully, including its weaknesses. Do not silently improve a vague brief.
 
 THE ASSOCIATE'S PROMPT:
 """
@@ -173,7 +175,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "The AI call failed. Check the API key and try again — the workstation is still fine to explore.",
+          "The AI call failed. Check the API key and try again. The workstation is still fine to explore.",
       },
       { status },
     );
