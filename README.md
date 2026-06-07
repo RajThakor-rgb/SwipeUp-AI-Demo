@@ -1,5 +1,7 @@
 # SwipeUp AI Academy — Velara demo
 
+> Deployed on Vercel with the Next.js framework preset (see `vercel.json`).
+
 A clickable demo of SwipeUp AI Academy: a **simulated company workstation** a
 student logs into like a new hire. They join Velara, get onboarded by email,
 are handed a real problem, solve it with AI inside the system, and watch the
