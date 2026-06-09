@@ -4,17 +4,37 @@
 // frameworks before they practise. Professor tone, never a hard fail: they fix
 // and recheck until it clicks, then move on.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { LEARN_COPY, QUIZ } from "@/config/learn";
 import { useWorkstation } from "@/lib/state";
 
+/** Shuffle each question's options once per session so the correct answer is
+ *  never in a fixed position. */
+function shuffleQuiz() {
+  return QUIZ.map((q) => {
+    const opts = q.options.map((text, i) => ({ text, correct: i === q.correctIndex }));
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    return {
+      id: q.id,
+      question: q.question,
+      explain: q.explain,
+      options: opts.map((o) => o.text),
+      correctIndex: opts.findIndex((o) => o.correct),
+    };
+  });
+}
+
 export default function Quiz() {
   const { dispatch } = useWorkstation();
+  const questions = useMemo(shuffleQuiz, []);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [checked, setChecked] = useState(false);
 
-  const allAnswered = QUIZ.every((q) => answers[q.id] !== undefined);
-  const allCorrect = QUIZ.every((q) => answers[q.id] === q.correctIndex);
+  const allAnswered = questions.every((q) => answers[q.id] !== undefined);
+  const allCorrect = questions.every((q) => answers[q.id] === q.correctIndex);
   const passed = checked && allCorrect;
 
   return (
@@ -22,10 +42,10 @@ export default function Quiz() {
       <div className="learn-intro">
         <div className="li-eyebrow">Quick check</div>
         <h2>Have you got it?</h2>
-        <p>Answer these three and you are ready to use the frameworks for real.</p>
+        <p>Answer these and you are ready to use the frameworks for real.</p>
       </div>
 
-      {QUIZ.map((q, qi) => {
+      {questions.map((q, qi) => {
         const chosen = answers[q.id];
         const isCorrect = chosen === q.correctIndex;
         return (

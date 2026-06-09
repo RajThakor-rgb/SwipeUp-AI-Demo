@@ -89,8 +89,8 @@ export const QUIZ: QuizQuestion[] = [
   {
     id: "q2",
     question: "In RISEN, what does the 'N' stand for?",
-    options: ["Notes", "Narrowing", "Naming", "Negotiation"],
-    correctIndex: 1,
+    options: ["Narrowing", "Notes", "Naming", "Negotiation"],
+    correctIndex: 0,
     explain:
       "Narrowing: the constraints. Length, what to avoid, and must-haves keep the AI on the rails.",
   },
@@ -99,13 +99,29 @@ export const QUIZ: QuizQuestion[] = [
     question: "Why does a framework like CO-STAR produce better results than a one-line prompt?",
     options: [
       "It makes the prompt longer.",
-      "It gives the AI the context, audience and format it would otherwise have to guess.",
       "It uses special keywords the AI is trained on.",
+      "It gives the AI the context, audience and format it would otherwise have to guess.",
       "It tells the AI to try harder.",
     ],
-    correctIndex: 1,
+    correctIndex: 2,
     explain:
       "Exactly. A good prompt removes guesswork. You supply the context, audience and format, so the AI can focus on doing the task well.",
+  },
+  {
+    id: "q4",
+    question: "In CO-STAR, which element sets the format you want back, such as an email or a list?",
+    options: ["Objective", "Tone", "Context", "Response"],
+    correctIndex: 3,
+    explain:
+      "Response. It tells the AI the shape of the output, for example a subject line and a short email, so you do not have to reshape it afterwards.",
+  },
+  {
+    id: "q5",
+    question: "In RISEN, which element tells the AI who to act as, for example a senior copywriter?",
+    options: ["Role", "Instructions", "Steps", "End goal"],
+    correctIndex: 0,
+    explain:
+      "Role. Giving the AI a clear identity to write from steers its expertise, vocabulary and judgement.",
   },
 ];
 
