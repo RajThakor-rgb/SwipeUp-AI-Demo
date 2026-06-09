@@ -4,6 +4,7 @@
 // the brand voice, and the live dashboard (the problem made visible). From here
 // the student starts the Prompt Engineering module.
 
+import { useState } from "react";
 import {
   COMPANY,
   DEPARTMENTS,
@@ -12,9 +13,11 @@ import {
 } from "@/config/case";
 import { useWorkstation } from "@/lib/state";
 import Dashboard from "./Dashboard";
+import VelaraSite from "./VelaraSite";
 
 export default function CaseView() {
   const { dispatch } = useWorkstation();
+  const [showSite, setShowSite] = useState(false);
 
   return (
     <div className="case">
@@ -28,6 +31,9 @@ export default function CaseView() {
         <div className="ch-meta">
           Founded {COMPANY.founded} · {COMPANY.hq}
         </div>
+        <button className="ch-site-btn" onClick={() => setShowSite(true)}>
+          Visit the Velara website →
+        </button>
       </div>
 
       <div className="case-grid">
@@ -81,6 +87,31 @@ export default function CaseView() {
           Start Prompt Engineering →
         </button>
       </div>
+
+      {showSite ? (
+        <div className="sitepeek-overlay" onClick={() => setShowSite(false)}>
+          <div className="sitepeek" onClick={(e) => e.stopPropagation()}>
+            <div className="sitepeek-bar">
+              <div className="sitepeek-dots">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="sitepeek-url">velara.com</div>
+              <button
+                className="sitepeek-close"
+                onClick={() => setShowSite(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="sitepeek-stage">
+              <VelaraSite />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
