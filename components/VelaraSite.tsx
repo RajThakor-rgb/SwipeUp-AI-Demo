@@ -3,6 +3,45 @@
 import { useState } from "react";
 import styles from "./VelaraSite.module.css";
 
+// Real, on-brand imagery. Grayscale fashion photos read as premium editorial and
+// keep the palette cohesive. If an image is slow or unavailable, the component
+// renders nothing and the gradient + monogram beneath it shows instead.
+function Img({
+  src,
+  alt,
+  className,
+}: {
+  src: string;
+  alt: string;
+  className: string;
+}) {
+  const [ok, setOk] = useState(true);
+  if (!ok) return null;
+  return (
+    <img
+      className={className}
+      src={src}
+      alt={alt}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setOk(false)}
+    />
+  );
+}
+
+const IMG_TAGS = [
+  "wool,coat",
+  "cashmere,scarf,knit",
+  "wool,sweater,knit",
+  "trench,coat",
+  "leather,handbag",
+  "silk,blouse",
+];
+const productImg = (i: number) =>
+  `https://loremflickr.com/g/640/800/${IMG_TAGS[i % IMG_TAGS.length]}?lock=${i + 12}`;
+const HERO_IMG = "https://loremflickr.com/g/1200/1000/fashion,editorial,model?lock=7";
+const SUSTAIN_IMG = "https://loremflickr.com/g/900/1000/wool,fabric,textile?lock=9";
+
 type Product = {
   name: string;
   material: string;
@@ -316,6 +355,7 @@ export default function VelaraSite() {
       <main className={styles.main}>
         {/* Hero */}
         <section className={styles.hero}>
+          <Img src={HERO_IMG} alt="" className={styles.heroPhoto} />
           <div className={styles.heroMonogram} aria-hidden="true">
             V
           </div>
@@ -362,7 +402,7 @@ export default function VelaraSite() {
           </div>
 
           <div className={styles.grid}>
-            {PRODUCTS.map((p) => (
+            {PRODUCTS.map((p, i) => (
               <article key={p.name} className={styles.card}>
                 <div
                   className={styles.cardImage}
@@ -373,6 +413,7 @@ export default function VelaraSite() {
                   <span className={styles.cardMonogram} aria-hidden="true">
                     {p.initials}
                   </span>
+                  <Img src={productImg(i)} alt={p.name} className={styles.cardPhoto} />
                   <span className={styles.cardTag}>{p.tag}</span>
                 </div>
                 <div className={styles.cardBody}>
@@ -413,6 +454,7 @@ export default function VelaraSite() {
             </a>
           </div>
           <div className={styles.sustainArt} aria-hidden="true">
+            <Img src={SUSTAIN_IMG} alt="" className={styles.sustainPhoto} />
             <div className={styles.sustainArtMark}>V</div>
           </div>
         </section>

@@ -973,3 +973,63 @@
   transform: translateY(-1px);
   box-shadow: 0 12px 22px -16px rgba(44, 39, 35, 0.45);
 }
+
+/* ---------- Real imagery ---------- */
+
+.cardMonogram {
+  z-index: 0;
+}
+.cardPhoto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  transition: transform 0.7s ease;
+}
+.card:hover .cardPhoto {
+  transform: scale(1.06);
+}
+.cardTag {
+  z-index: 2;
+}
+
+.heroPhoto {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  object-fit: cover;
+  object-position: center 22%;
+  z-index: 0;
+  opacity: 0.95;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 44%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 44%);
+}
+
+.sustainArt {
+  position: relative;
+}
+.sustainPhoto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  opacity: 0.95;
+}
+.sustainArtMark {
+  position: relative;
+  z-index: 1;
+  mix-blend-mode: soft-light;
+  opacity: 0.5;
+}
+
+@media (max-width: 900px) {
+  .heroPhoto {
+    display: none;
+  }
+}
