@@ -66,3 +66,5 @@ and the three interruption beats (onboarding, reaction, debrief) are shared.
 Next.js (App Router) · TypeScript · `@anthropic-ai/sdk` · plain CSS. No auth
 (login is visual only). Panels open/close/minimise, not a draggable window
 manager, by design.
+
+<!-- deploy: quiz v2 (5 shuffled questions) -->
