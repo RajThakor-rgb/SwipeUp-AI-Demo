@@ -50,7 +50,9 @@ export default function Home() {
             className={`module-tile ${m.locked ? "locked" : ""}`}
             disabled={m.locked}
             onClick={() => {
-              if (!m.locked) dispatch({ type: "OPEN_MODULE" });
+              if (m.locked) return;
+              if (m.id === "chatbot") dispatch({ type: "SET_VIEW", value: "chatbot" });
+              else dispatch({ type: "OPEN_MODULE" });
             }}
           >
             <div className="mt-top">

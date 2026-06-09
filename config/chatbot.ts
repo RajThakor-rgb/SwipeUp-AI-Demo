@@ -273,7 +273,7 @@ export const COPY = {
   intro:
     "Velara's customers love the product but cannot get simple answers online. Where is my order? Can I still return this? Support is buried under the same questions every day, and replies are slow. Your job is to build the assistant that lives on the Velara website and handles these conversations, in the brand's voice, without ever inventing an answer.",
   buildIntro:
-    "Configure your assistant on the left using GUARD, then click the chat bubble on the Velara site to talk to it as a customer. Try asking where order 4827 is, or whether you can return a coat. Notice how it behaves before and after you give it Knowledge.",
+    "You are building a Custom GPT-style assistant for Velara, powered live by our integrated Claude API. Configure it on the left using GUARD, then click the chat bubble on the Velara site and talk to it as a customer. Try asking where order 4827 is, or whether you can return a coat, and watch how it changes once you give it Knowledge.",
   exportNote:
-    "This compiled prompt is the real artifact. Paste it into a Custom GPT, a Claude Project, or any no-code chatbot builder to deploy the same assistant.",
+    "This compiled prompt is the real artifact, the same configuration you would give a Custom GPT. Here it runs live through our integrated Claude API. Paste it into a ChatGPT Custom GPT, a Claude Project, or any no-code builder to deploy the same assistant anywhere.",
 };

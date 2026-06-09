@@ -28,9 +28,8 @@ export const MODULES: Module[] = [
     id: "chatbot",
     name: "Chatbot Creation",
     glyph: "◎",
-    blurb: "Design an AI assistant that answers customers without losing the brand's voice.",
-    locked: true,
-    unlockHint: "Unlocks after Prompt Engineering",
+    blurb: "Build a Custom GPT-style support assistant, powered by Claude, and watch it answer customers live on the Velara store.",
+    locked: false,
   },
   {
     id: "automation",

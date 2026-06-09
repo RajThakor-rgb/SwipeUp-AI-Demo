@@ -14,7 +14,7 @@ import { METRICS } from "@/config/case";
 import type { Attempt } from "@/lib/types";
 
 export type Screen = "portal" | "boot" | "lock" | "app";
-export type View = "home" | "case" | "module";
+export type View = "home" | "case" | "module" | "chatbot";
 export type Stage = "learn" | "quiz" | "practice" | "consolidate";
 
 export interface State {

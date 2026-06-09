@@ -32,7 +32,7 @@ export const COMPANY = {
   founded: 2019,
   hq: "London, UK",
   blurb:
-    "Velara is a UK sustainable luxury fashion house, founded in 2019. It runs two boutiques, in Mayfair and Knightsbridge, plus a growing website. Collections are small-batch, made from certified materials, and sold at a high price point to a discerning clientele.",
+    "Velara is a UK sustainable luxury fashion house, founded in 2019. It runs two boutiques, in Mayfair and Knightsbridge, and a full e-commerce website that is fast becoming its busiest storefront. Collections are small-batch, made from certified materials, and sold at a high price point to a discerning clientele.",
   newHire: {
     name: "Raj",
     role: "Marketing Associate",

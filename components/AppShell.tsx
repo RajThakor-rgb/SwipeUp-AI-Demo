@@ -7,6 +7,7 @@ import { COMPANY, UNIVERSITY } from "@/config/case";
 import { useWorkstation } from "@/lib/state";
 import { useClock } from "@/lib/useClock";
 import CaseView from "./CaseView";
+import ChatbotModule from "./chatbot/ChatbotModule";
 import Home from "./Home";
 import ModuleView from "./ModuleView";
 
@@ -42,6 +43,9 @@ export default function AppShell() {
         {state.view === "home" ? <Home /> : null}
         {state.view === "case" ? <CaseView /> : null}
         {state.view === "module" ? <ModuleView /> : null}
+        {state.view === "chatbot" ? (
+          <ChatbotModule onHome={() => dispatch({ type: "SET_VIEW", value: "home" })} />
+        ) : null}
       </main>
     </div>
   );
