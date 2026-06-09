@@ -1,15 +1,10 @@
 // ============================================================================
-// THE RESULT ENGINE ,  server-side, the heart of the product
+// THE RESULT ENGINE  —  server-side, the heart of the product
 // ----------------------------------------------------------------------------
-// One POST per attempt runs TWO Claude calls:
-//   1. GENERATE, turn the student's prompt into an actual launch email.
-//   2. JUDGE   , score that email against fixed criteria and return strict
-//                 JSON: a score + one-line reason per criterion, plus a change
-//                 (delta) to each dashboard metric, plus an overall band.
-//
-// The judge is kept stable: fixed criteria baked into the system prompt,
-// temperature 0, and structured outputs so the JSON is guaranteed parseable , 
-// no prose, no markdown fences, no brittle hand-parsing.
+// One POST per attempt makes ONE Claude call that does both jobs in a single
+// pass: (1) write the launch email from the student's prompt, then (2) judge
+// that email and return strict JSON (band, coach, focus, per-criterion scores,
+// and a delta per dashboard metric). One round trip keeps the demo snappy.
 //
 // The API key is read ONLY here, from the environment. It never touches the
 // client. If it isn't set, we return { configured: false } so the UI can show
@@ -30,7 +25,7 @@ import type { Judgment } from "@/lib/types";
 
 // Run on the Node.js runtime (the Anthropic SDK expects it).
 export const runtime = "nodejs";
-// Never cache attempts, every prompt is fresh.
+// Never cache attempts — every prompt is fresh.
 export const dynamic = "force-dynamic";
 
 /** True only when a real-looking key is present. */
@@ -39,74 +34,49 @@ function hasApiKey(): boolean {
   return Boolean(key && key.trim() && key.startsWith("sk-"));
 }
 
-// ---- JSON schema the judge must return (structured outputs) ----------------
+// ---- Prompt ----------------------------------------------------------------
+// A single system prompt covers both jobs and pins one JSON shape. We instruct
+// strict JSON and parse defensively (see extractJson), depending only on the
+// core Messages API — no preview parameters that could 400 in a live demo.
 
-// ---- Prompts ---------------------------------------------------------------
-// The two calls are constrained by explicit JSON-shape instructions and parsed
-// defensively (see extractJson). We deliberately depend only on the core
-// Messages API, no preview parameters that could 400 in a live demo.
+const SYSTEM = `You have two jobs in one reply, for ${COMPANY.legalName}, a UK sustainable luxury fashion house preparing the autumn collection launch email, aimed at customers who bought once over a year ago and drifted. ${COMPANY.name}'s voice rules are: ${VOICE_RULES}.
 
-const GENERATE_SYSTEM = `You are Claude, the AI tool that ${COMPANY.legalName} runs its marketing copy through. You produce campaign copy on demand. You follow the brief you are given exactly. If the brief is vague, the output will be generic; if the brief is specific, the output will be sharp.
+JOB 1, WRITE THE EMAIL. As Claude, ${COMPANY.name}'s AI marketing tool, write the launch email from the student's brief. Follow the brief faithfully, including its weaknesses: if it is vague the email is generic, if it is specific the email is sharp. Never use em dashes. Avoid hype words and marketing buzzwords.
 
-Never use em dashes. Write with commas, full stops, or colons instead. Avoid hype words and marketing buzzwords.
-
-Return ONLY a JSON object. No commentary, no explanation, no markdown, no code fences. Exactly this shape:
-{"subject": "<the email subject line>", "body": "<the short email body, plain text, line breaks allowed>"}`;
-
-function generateUser(studentPrompt: string): string {
-  return `A marketing associate has written the following prompt to brief you for an email. Follow it faithfully, including its weaknesses. Do not silently improve a vague brief.
-
-THE ASSOCIATE'S PROMPT:
-"""
-${studentPrompt}
-"""
-
-Context you may use only if the prompt asks for it: ${COMPANY.name} is ${COMPANY.blurb} Situation: ${SITUATION}
-
-Write the email now.`;
-}
-
-const JUDGE_SYSTEM = `You are the brand and performance reviewer at ${COMPANY.legalName}, a UK sustainable luxury fashion house. You evaluate campaign emails for the autumn collection launch, aimed at customers who bought once over a year ago and drifted.
-
-${COMPANY.name}'s voice rules are: ${VOICE_RULES}.
-
-Judge strictly and consistently against exactly these criteria (0-10 each):
+JOB 2, JUDGE THE EMAIL. Now act as an impartial brand and performance reviewer and judge the email you just wrote, strictly and on its own merits.
+Score these criteria (0-10 each):
 ${CRITERIA.map((c) => `- ${c.label}: ${c.hint}`).join("\n")}
-
-Then project the impact on three campaign metrics as a delta (change) on each:
-- engagement: campaign engagement score, currently ${METRICS.find((m) => m.id === "engagement")?.value}/100.
-- openRate: predicted email open rate %, currently ${METRICS.find((m) => m.id === "openRate")?.value}%.
-- clickThrough: predicted click-through %, currently ${METRICS.find((m) => m.id === "clickThrough")?.value}%.
+Project the impact on three metrics as a delta on each:
+- engagement: currently ${METRICS.find((m) => m.id === "engagement")?.value}/100.
+- openRate: currently ${METRICS.find((m) => m.id === "openRate")?.value}%.
+- clickThrough: currently ${METRICS.find((m) => m.id === "clickThrough")?.value}%.
 
 This is a TEACHING simulator that rewards iteration, so be demanding about the top band:
 - WEAK (lazy or generic prompt: no audience, hype words, sale language, exclamation marks): rate "weak" and move DOWN or barely. engagement -6 to +1, openRate -3 to +1, clickThrough -0.4 to +0.1.
 - MIDDLING (a real framework attempt, but the audience is only loosely drawn, OR the email is still a little generic, OR a constraint is missed): rate "middling". engagement +2 to +7, openRate +1 to +3, clickThrough +0.1 to +0.5. A student's FIRST framework attempt should usually land here.
-- STRONG (the prompt is fully specified AND the email delivers: an explicit lapsed customer who bought once over a year ago and drifted, a clear tone, real constraints such as length, no hype and one call to action, and copy that is concrete, on-brand and speaks directly to that lapsed customer's gap): rate "strong" and apply a clear, satisfying lift. engagement +12 to +18, openRate +5 to +9, clickThrough +0.9 to +1.6.
+- STRONG (the prompt is fully specified AND the email delivers: an explicit lapsed customer who bought once over a year ago and drifted, a clear tone, real constraints such as length, no hype and one call to action, and copy that is concrete, on-brand and speaks directly to that lapsed customer's gap): rate "strong" with a clear, satisfying lift. engagement +12 to +18, openRate +5 to +9, clickThrough +0.9 to +1.6.
 
 Rules you must not break:
-- Be demanding about "strong". It requires BOTH a fully specified prompt AND specific, on-brand copy. It is normal and good for a student to need two or three refinements to reach it. Do not award "strong" on a first decent attempt.
+- Be demanding about "strong". It requires BOTH a fully specified prompt AND specific, on-brand copy. It is normal for a student to need two or three refinements to reach it. Do not award "strong" on a first decent attempt.
 - Reserve "weak" for genuinely lazy prompts.
 - Never reward pure length or effort alone.
-- Pressing submit must never guarantee a rise. A bad prompt still falls.
+- A bad prompt still falls. Submitting never guarantees a rise.
 - Be consistent: the same email should always earn roughly the same scores.
 
-Set band to "weak", "middling", or "strong" to match the overall quality.
+You are a supportive professor, not a checker, and you teach by guiding, never by writing the prompt for the student. They are learning two frameworks: CO-STAR (Context, Objective, Style, Tone, Audience, Response) and RISEN (Role, Instructions, Steps, End goal, Narrowing), and can open either with a button on their screen. Write a "coach" message of 2 to 3 sentences in a warm tutor's voice. Always tie it to the business outcome. Then GRADUATE how much you reveal by the attempt number, and NEVER write example wording or anything they could paste:
+- Attempt 1 or 2 (not strong): keep it light. Encourage them, then tell them to open the CO-STAR or RISEN framework with the button and find which element their prompt is missing. Do NOT name the element. Set "focus" to [].
+- Attempt 3 (not strong): name one or two framework elements to add (for example Audience, Narrowing) and explain in general terms why they help. No example sentences. Put those names in "focus".
+- Attempt 4 (not strong): name the elements and add a short conceptual hint for each, still no example wording and never the actual prompt. Put the names in "focus".
+- Strong (any attempt): say what specifically worked and why. Set "focus" to [].
 
-You are a supportive professor, not a checker, and you teach by guiding, never by writing the prompt for the student. They are learning two frameworks: CO-STAR (Context, Objective, Style, Tone, Audience, Response) and RISEN (Role, Instructions, Steps, End goal, Narrowing). They can open either framework with a button on their screen.
+Do not use em dashes. Address the student as "you".
 
-Write a "coach" message of 2 to 3 sentences in a warm tutor's voice. Always tie it to the business outcome ("after we sent this, engagement barely moved", or "the projections jumped"). Then GRADUATE how much you reveal by the attempt number you are given, and NEVER write example wording or anything they could paste:
-- Attempt 1 or 2 (not strong): keep it light. Encourage them, then tell them to open the CO-STAR or RISEN framework with the button and find which element their prompt is missing. Do NOT name the element yet. Set "focus" to an empty array [].
-- Attempt 3 (not strong): give a little more. Name one or two framework elements to add (for example Audience, Narrowing) and explain in general terms why they would help. No example sentences. Put those element names in "focus".
-- Attempt 4 (not strong): a little more again. Name the elements and add a short conceptual hint for each, still with no example wording and never the actual prompt. Put the element names in "focus".
-- Strong (any attempt): say what specifically worked and why, so they remember it. Set "focus" to an empty array [].
-
-Never include a ready-to-paste prompt, example subject lines, or sentences the student could copy. Do not use em dashes. Address the student as "you".
-
-Return ONLY a JSON object. No commentary, no markdown, no code fences. Exactly this shape:
+Return ONLY ONE JSON object. No commentary, no markdown, no code fences. Exactly this shape:
 {
+  "email": { "subject": "<the subject line>", "body": "<the short body, line breaks allowed>" },
   "band": "weak" | "middling" | "strong",
   "coach": "<2-3 sentence professor message, graduated to the attempt>",
-  "focus": [ "<framework element name to revisit, only on attempt 3+ and not strong>" ],
+  "focus": [ "<framework element name, only on attempt 3+ and not strong>" ],
   "criteria": {
     ${CRITERIA.map((c) => `"${c.id}": { "score": <integer 0-10>, "reason": "<one short line>" }`).join(",\n    ")}
   },
@@ -115,15 +85,17 @@ Return ONLY a JSON object. No commentary, no markdown, no code fences. Exactly t
   }
 }`;
 
-function judgeUser(subject: string, body: string, attempt: number): string {
-  return `This is the student's attempt number ${attempt} of 4. Graduate your coaching to this attempt as instructed.
+function buildUser(studentPrompt: string, attempt: number): string {
+  return `This is the student's attempt number ${attempt} of 4. Graduate your coaching to this attempt.
 
-Evaluate this autumn launch email.
+THE STUDENT'S PROMPT:
+"""
+${studentPrompt}
+"""
 
-SUBJECT: ${subject}
+Context for writing the email, use only if the prompt asks for it: ${COMPANY.name} is ${COMPANY.blurb} Situation: ${SITUATION}
 
-BODY:
-${body}`;
+Write the email, then judge it. Return the single JSON object.`;
 }
 
 // ---- Handler ---------------------------------------------------------------
@@ -159,43 +131,34 @@ export async function POST(request: Request) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   try {
-    // ---- Call 1: GENERATE the email from the student's prompt -------------
-    // We instruct strict JSON in the system prompt and parse defensively, so
-    // the loop can't break on a stray code fence or preamble.
-    const genResp = await client.messages.create({
+    // One call: write the email and judge it in a single pass.
+    const resp = await client.messages.create({
       model: MODEL,
-      max_tokens: 1200,
-      temperature: 0.7, // a little room so prompt quality visibly changes the output
-      system: GENERATE_SYSTEM,
-      messages: [{ role: "user", content: generateUser(prompt) }],
+      max_tokens: 1400,
+      temperature: 0.5, // enough variation in the copy; stable enough to judge
+      system: SYSTEM,
+      messages: [{ role: "user", content: buildUser(prompt, attempt) }],
     });
 
-    const email = extractJson<{ subject: string; body: string }>(
-      firstText(genResp),
-    );
+    const parsed = extractJson<
+      { email?: { subject?: string; body?: string } } & Judgment
+    >(firstText(resp));
 
-    // ---- Call 2: JUDGE the generated email -------------------------------
-    const judgeResp = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1200,
-      temperature: 0, // stable, repeatable judging
-      system: JUDGE_SYSTEM,
-      messages: [
-        { role: "user", content: judgeUser(email.subject, email.body, attempt) },
-      ],
-    });
+    const email = {
+      subject: typeof parsed.email?.subject === "string" ? parsed.email.subject : "",
+      body: typeof parsed.email?.body === "string" ? parsed.email.body : "",
+    };
+    if (!email.subject && !email.body) {
+      throw new Error("No email in model response.");
+    }
 
-    const judgment = normalizeJudgment(
-      extractJson<Judgment>(firstText(judgeResp)),
-      attempt,
-    );
+    const judgment = normalizeJudgment(parsed, attempt);
 
     return NextResponse.json({ configured: true, email, judgment });
   } catch (err) {
     // Surface a clean message; keep the detail in the server log.
     console.error("[result-engine]", err);
-    const status =
-      err instanceof Anthropic.APIError ? err.status ?? 502 : 500;
+    const status = err instanceof Anthropic.APIError ? err.status ?? 502 : 500;
     return NextResponse.json(
       {
         error:
@@ -244,8 +207,9 @@ function extractJson<T>(text: string): T {
 
 /**
  * Harden the judge output: guarantee every criterion and every metric is
- * present and well-typed, and the band is valid. The dashboard can then render
- * without any chance of NaN or undefined.
+ * present and well-typed, the band is valid, the coach is graduated, and focus
+ * only appears on later attempts. The dashboard can then render without any
+ * chance of NaN or undefined.
  */
 function normalizeJudgment(raw: Judgment, attempt: number): Judgment {
   const band: Judgment["band"] =
