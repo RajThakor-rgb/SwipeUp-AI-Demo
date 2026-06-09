@@ -16,6 +16,15 @@ const MAX_ATTEMPTS = 4;
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));
 
+/** A short, professional SwipeUp encouragement tuned to progress. */
+function encouragement(band: string, attemptNo: number, reachedMax: boolean): string {
+  if (band === "strong") return "Outstanding. You've mastered the move.";
+  if (reachedMax) return "Strong progress today. Let's review what you've learned.";
+  if (attemptNo <= 1) return "Great first attempt. You're on the right track.";
+  if (attemptNo === 2) return "You're improving. Keep refining.";
+  return "Almost there. One more sharpening and it will land.";
+}
+
 export default function Practice() {
   const { state, dispatch } = useWorkstation();
   const [prompt, setPrompt] = useState("");
@@ -171,6 +180,10 @@ export default function Practice() {
             ) : reachedMax ? (
               <div className="coach-win">That is plenty of practice. Let's review what you learned.</div>
             ) : null}
+            <div className="coach-encourage">
+              <span className="ce-mark">S</span>
+              SwipeUp Coach · {encouragement(latest.judgment.band, attemptNo, reachedMax)}
+            </div>
           </div>
         ) : (
           <div className="coach idle">

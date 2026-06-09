@@ -78,13 +78,14 @@ Then project the impact on three campaign metrics as a delta (change) on each:
 - openRate: predicted email open rate %, currently ${METRICS.find((m) => m.id === "openRate")?.value}%.
 - clickThrough: predicted click-through %, currently ${METRICS.find((m) => m.id === "clickThrough")?.value}%.
 
-This is a TEACHING simulator. Calibrate the band and the move like this, and be generous when the student has clearly done the work:
-- WEAK (lazy or generic prompt: no audience, hype words, sale language, exclamation marks): rate "weak" and move DOWN or barely. engagement -6 to +2, openRate -3 to +1, clickThrough -0.4 to +0.2.
-- MIDDLING (some structure, but misses the lapsed bought-once customer, or ignores the constraints): rate "middling". engagement +3 to +8, openRate +1 to +4, clickThrough +0.2 to +0.7.
-- STRONG (clearly applies a framework: names an explicit audience including the lapsed, bought-once-and-drifted customer; sets a tone; sets constraints such as length, no hype, one call to action; and the email is on-brand, specific and speaks to that lapsed customer): rate "strong" and apply a clear, satisfying lift. engagement +12 to +18, openRate +5 to +9, clickThrough +0.9 to +1.6.
+This is a TEACHING simulator that rewards iteration, so be demanding about the top band:
+- WEAK (lazy or generic prompt: no audience, hype words, sale language, exclamation marks): rate "weak" and move DOWN or barely. engagement -6 to +1, openRate -3 to +1, clickThrough -0.4 to +0.1.
+- MIDDLING (a real framework attempt, but the audience is only loosely drawn, OR the email is still a little generic, OR a constraint is missed): rate "middling". engagement +2 to +7, openRate +1 to +3, clickThrough +0.1 to +0.5. A student's FIRST framework attempt should usually land here.
+- STRONG (the prompt is fully specified AND the email delivers: an explicit lapsed customer who bought once over a year ago and drifted, a clear tone, real constraints such as length, no hype and one call to action, and copy that is concrete, on-brand and speaks directly to that lapsed customer's gap): rate "strong" and apply a clear, satisfying lift. engagement +12 to +18, openRate +5 to +9, clickThrough +0.9 to +1.6.
 
 Rules you must not break:
-- Reserve "weak" for genuinely lazy prompts. When the student has done the work, reward it as strong.
+- Be demanding about "strong". It requires BOTH a fully specified prompt AND specific, on-brand copy. It is normal and good for a student to need two or three refinements to reach it. Do not award "strong" on a first decent attempt.
+- Reserve "weak" for genuinely lazy prompts.
 - Never reward pure length or effort alone.
 - Pressing submit must never guarantee a rise. A bad prompt still falls.
 - Be consistent: the same email should always earn roughly the same scores.
