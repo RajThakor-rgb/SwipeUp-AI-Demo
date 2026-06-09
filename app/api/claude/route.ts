@@ -92,20 +92,21 @@ Rules you must not break:
 
 Set band to "weak", "middling", or "strong" to match the overall quality.
 
-You are also a supportive professor, not a checker. The student is learning two prompt frameworks, CO-STAR (Context, Objective, Style, Tone, Audience, Response) and RISEN (Role, Instructions, Steps, End goal, Narrowing). Write a "coach" message of 2 to 3 sentences in a warm, encouraging tutor's voice that:
-- Ties the result to the business outcome (e.g. "after we sent this, engagement barely moved" for weak/middling, or "the projections jumped" for strong).
-- For weak or middling, names ONE specific framework element they should add next (for example Audience, Tone, or Narrowing) and what to do with it, then invites them to try again. Guide, never scold.
-- For strong, says what specifically worked and why, so they remember it.
+You are a supportive professor, not a checker, and you teach by guiding, never by writing the prompt for the student. They are learning two frameworks: CO-STAR (Context, Objective, Style, Tone, Audience, Response) and RISEN (Role, Instructions, Steps, End goal, Narrowing). They can open either framework with a button on their screen.
 
-Also return a "structure": a short fill-in scaffold the student can copy into their NEXT prompt. For weak or middling, give 3 or 4 items, each a framework element with a concrete suggestion for THIS task (the Velara autumn email to a lapsed customer). For strong, return an empty array [].
+Write a "coach" message of 2 to 3 sentences in a warm tutor's voice. Always tie it to the business outcome ("after we sent this, engagement barely moved", or "the projections jumped"). Then GRADUATE how much you reveal by the attempt number you are given, and NEVER write example wording or anything they could paste:
+- Attempt 1 or 2 (not strong): keep it light. Encourage them, then tell them to open the CO-STAR or RISEN framework with the button and find which element their prompt is missing. Do NOT name the element yet. Set "focus" to an empty array [].
+- Attempt 3 (not strong): give a little more. Name one or two framework elements to add (for example Audience, Narrowing) and explain in general terms why they would help. No example sentences. Put those element names in "focus".
+- Attempt 4 (not strong): a little more again. Name the elements and add a short conceptual hint for each, still with no example wording and never the actual prompt. Put the element names in "focus".
+- Strong (any attempt): say what specifically worked and why, so they remember it. Set "focus" to an empty array [].
 
-Do not use em dashes. Address the student as "you".
+Never include a ready-to-paste prompt, example subject lines, or sentences the student could copy. Do not use em dashes. Address the student as "you".
 
 Return ONLY a JSON object. No commentary, no markdown, no code fences. Exactly this shape:
 {
   "band": "weak" | "middling" | "strong",
-  "coach": "<2-3 sentence professor message as described>",
-  "structure": [ { "label": "<framework element, e.g. Audience>", "fill": "<concrete suggestion for this task>" } ],
+  "coach": "<2-3 sentence professor message, graduated to the attempt>",
+  "focus": [ "<framework element name to revisit, only on attempt 3+ and not strong>" ],
   "criteria": {
     ${CRITERIA.map((c) => `"${c.id}": { "score": <integer 0-10>, "reason": "<one short line>" }`).join(",\n    ")}
   },
@@ -114,8 +115,10 @@ Return ONLY a JSON object. No commentary, no markdown, no code fences. Exactly t
   }
 }`;
 
-function judgeUser(subject: string, body: string): string {
-  return `Evaluate this autumn launch email.
+function judgeUser(subject: string, body: string, attempt: number): string {
+  return `This is the student's attempt number ${attempt} of 4. Graduate your coaching to this attempt as instructed.
+
+Evaluate this autumn launch email.
 
 SUBJECT: ${subject}
 
@@ -136,9 +139,12 @@ export async function POST(request: Request) {
   }
 
   let prompt: string;
+  let attempt: number;
   try {
     const json = await request.json();
     prompt = typeof json?.prompt === "string" ? json.prompt.trim() : "";
+    attempt = Number(json?.attempt);
+    if (!Number.isFinite(attempt) || attempt < 1) attempt = 1;
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -175,12 +181,13 @@ export async function POST(request: Request) {
       temperature: 0, // stable, repeatable judging
       system: JUDGE_SYSTEM,
       messages: [
-        { role: "user", content: judgeUser(email.subject, email.body) },
+        { role: "user", content: judgeUser(email.subject, email.body, attempt) },
       ],
     });
 
     const judgment = normalizeJudgment(
       extractJson<Judgment>(firstText(judgeResp)),
+      attempt,
     );
 
     return NextResponse.json({ configured: true, email, judgment });
@@ -240,7 +247,7 @@ function extractJson<T>(text: string): T {
  * present and well-typed, and the band is valid. The dashboard can then render
  * without any chance of NaN or undefined.
  */
-function normalizeJudgment(raw: Judgment): Judgment {
+function normalizeJudgment(raw: Judgment, attempt: number): Judgment {
   const band: Judgment["band"] =
     raw?.band === "weak" || raw?.band === "strong" ? raw.band : "middling";
 
@@ -264,41 +271,34 @@ function normalizeJudgment(raw: Judgment): Judgment {
     };
   }
 
-  const fallbackCoach: Record<Judgment["band"], string> = {
-    weak: "Good effort, but after we sent this the analytics barely moved. Try giving the AI an Audience and a Tone using CO-STAR, then run it again and watch the market respond.",
-    middling:
-      "Better. It is starting to land, but the lift is small. Add Narrowing from RISEN, the things to avoid and a tighter length, and let's see how the numbers move.",
-    strong:
-      "This is the level. You gave the AI a clear audience, tone and constraints, and the projections jumped. That is prompt engineering working for the business.",
-  };
+  // Graduated fallback coaching, used only if the model returns no coach text.
+  let fallbackCoach: string;
+  if (band === "strong") {
+    fallbackCoach =
+      "Excellent. You gave the AI a clear audience, tone and constraints, and the market responded. That is the level.";
+  } else if (attempt <= 2) {
+    fallbackCoach =
+      "After we sent this, the analytics barely moved. Open the CO-STAR or RISEN framework with the button and look for the element your prompt is missing, then try again.";
+  } else if (attempt === 3) {
+    fallbackCoach =
+      "Closer, but the lift is small. Think about Audience and Narrowing: who exactly are you writing to, and what should the email avoid? Add those and run it again.";
+  } else {
+    fallbackCoach =
+      "You are nearly there. Make the audience a specific lapsed customer and keep the constraints tight, short, no hype, one call to action. One more refinement should do it.";
+  }
   const coach =
     typeof raw?.coach === "string" && raw.coach.trim()
       ? raw.coach.trim()
-      : fallbackCoach[band];
+      : fallbackCoach;
 
-  // A fill-in scaffold for the next prompt. Empty for strong; a sensible default
-  // for weak/middling if the model didn't supply one.
-  const fallbackStructure =
-    band === "strong"
-      ? []
-      : [
-          { label: "Audience", fill: "a client who bought one piece over a year ago and then went quiet" },
-          { label: "Tone", fill: "warm, understated, sincere, no hype" },
-          { label: "What to avoid", fill: "exclamation marks, sale language, phrases like 'don't miss out'" },
-          { label: "Format", fill: "a subject under 8 words and a body under 110 words with one quiet call to action" },
-        ];
-  const structure =
-    band === "strong"
-      ? []
-      : Array.isArray(raw?.structure) && raw.structure.length
-        ? raw.structure
-            .filter((s: unknown): s is { label: unknown; fill: unknown } => !!s && typeof s === "object")
-            .map((s: { label: unknown; fill: unknown }) => ({
-              label: typeof s.label === "string" ? s.label : "",
-              fill: typeof s.fill === "string" ? s.fill : "",
-            }))
-            .filter((s: { label: string; fill: string }) => s.label && s.fill)
-        : fallbackStructure;
+  // Framework element names to revisit. Only on later attempts, never the prompt.
+  let focus: string[] = [];
+  if (band !== "strong" && attempt >= 3) {
+    focus =
+      Array.isArray(raw?.focus) && raw.focus.length
+        ? raw.focus.filter((s: unknown): s is string => typeof s === "string" && s.trim().length > 0)
+        : ["Audience", "Narrowing"];
+  }
 
-  return { band, criteria, metrics, coach, structure };
+  return { band, criteria, metrics, coach, focus };
 }

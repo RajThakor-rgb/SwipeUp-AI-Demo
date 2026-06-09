@@ -84,10 +84,10 @@ export interface Judgment {
   band: "weak" | "middling" | "strong";
   criteria: Record<string, CriterionResult>;
   metrics: Record<string, MetricDelta>;
-  /** Professor-voiced coaching, tied to the analytics result and the frameworks. */
+  /** Professor-voiced coaching, graduated by attempt, tied to the analytics. */
   coach: string;
-  /** A fill-in scaffold for the next prompt (shown when not yet strong). */
-  structure: { label: string; fill: string }[];
+  /** Framework element names to revisit (only on later attempts; never the prompt itself). */
+  focus: string[];
 }
 
 export interface GeneratedEmail {

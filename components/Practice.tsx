@@ -7,10 +7,11 @@
 
 import { useState } from "react";
 import { METRICS, TASK } from "@/config/case";
-import { FRAMEWORKS } from "@/config/learn";
+import { FRAMEWORKS, type Framework } from "@/config/learn";
 import { useWorkstation } from "@/lib/state";
 import type { AttemptResult } from "@/lib/types";
 import Dashboard from "./Dashboard";
+import FrameworkModal from "./FrameworkModal";
 
 const MAX_ATTEMPTS = 4;
 const clamp = (n: number, min: number, max: number) =>
@@ -31,6 +32,7 @@ export default function Practice() {
   const [phase, setPhase] = useState<"idle" | "generating" | "judging">("idle");
   const [warn, setWarn] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [openFw, setOpenFw] = useState<Framework | null>(null);
 
   const latest = state.attempts[state.attempts.length - 1] ?? null;
   const busy = phase !== "idle";
@@ -50,7 +52,7 @@ export default function Practice() {
       const res = await fetch("/api/claude", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, attempt: state.attempts.length + 1 }),
       });
       const data = await res.json();
       clearTimeout(toJudging);
@@ -98,9 +100,11 @@ export default function Practice() {
         </div>
 
         <div className="fw-reminder">
-          Remember the frameworks:
+          Need a reminder? Open a framework:
           {FRAMEWORKS.map((f) => (
-            <span className="fw-chip" key={f.id}>{f.name}</span>
+            <button className="fw-chip" key={f.id} onClick={() => setOpenFw(f)}>
+              {f.name}
+            </button>
           ))}
         </div>
 
@@ -164,14 +168,21 @@ export default function Practice() {
               <span className="coach-name">Your AI coach</span>
             </div>
             <div className="coach-text">{latest.judgment.coach}</div>
-            {latest.judgment.structure?.length ? (
-              <div className="coach-structure">
-                <div className="cs-head">Try this shape in your next prompt</div>
-                {latest.judgment.structure.map((s, i) => (
-                  <div className="cs-row" key={i}>
-                    <span className="cs-label">{s.label}</span>
-                    <span className="cs-fill">{s.fill}</span>
-                  </div>
+            {!isStrong ? (
+              <div className="coach-open">
+                Open a framework:
+                {FRAMEWORKS.map((f) => (
+                  <button className="fw-chip sm" key={f.id} onClick={() => setOpenFw(f)}>
+                    {f.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {latest.judgment.focus?.length ? (
+              <div className="coach-focus">
+                <span className="cf-label">Focus on</span>
+                {latest.judgment.focus.map((f, i) => (
+                  <span className="cf-chip" key={i}>{f}</span>
                 ))}
               </div>
             ) : null}
@@ -203,6 +214,8 @@ export default function Practice() {
           <Dashboard compact />
         </div>
       </div>
+
+      {openFw ? <FrameworkModal framework={openFw} onClose={() => setOpenFw(null)} /> : null}
     </div>
   );
 }

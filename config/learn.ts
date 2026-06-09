@@ -52,9 +52,9 @@ export const BEFORE_AFTER = {
   topic: "A simple example: a welcome email for a meditation app",
   weak: {
     label: "Vague prompt",
-    prompt: "Write a welcome email for our app.",
+    prompt: "Write a welcome email for our meditation app.",
     output:
-      "Subject: Welcome!\n\nThanks for signing up. Our app has lots of great features to help you. Get started today and let us know if you have questions!",
+      "Subject: Welcome!\n\nThanks for downloading our meditation app. It has lots of great features to help you relax and feel your best. Get started today, and let us know if you have any questions!",
     note: "No audience, no tone, no goal. The AI guesses, and you get generic filler.",
   },
   strong: {
