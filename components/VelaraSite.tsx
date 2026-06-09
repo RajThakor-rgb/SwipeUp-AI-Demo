@@ -199,10 +199,31 @@ const TRUST: { glyph: JSX.Element; label: string }[] = [
 ];
 
 export default function VelaraSite() {
-  const [cart, setCart] = useState(0);
+  const [cart, setCart] = useState<Record<string, number>>({});
   const [activeNav, setActiveNav] = useState("The Autumn Collection");
+  const [cartOpen, setCartOpen] = useState(false);
 
-  const addToCart = () => setCart((c) => c + 1);
+  const priceOf = (name: string) => {
+    const found = PRODUCTS.find((x) => x.name === name);
+    return found ? Number(found.price.replace(/[^0-9.]/g, "")) : 0;
+  };
+  const addToCart = (name: string) => {
+    setCart((c) => ({ ...c, [name]: (c[name] ?? 0) + 1 }));
+    setCartOpen(true);
+  };
+  const removeOne = (name: string) =>
+    setCart((c) => {
+      const next = { ...c };
+      const q = (next[name] ?? 0) - 1;
+      if (q <= 0) delete next[name];
+      else next[name] = q;
+      return next;
+    });
+  const count = Object.values(cart).reduce((a, b) => a + b, 0);
+  const subtotal = Object.entries(cart).reduce(
+    (a, [name, q]) => a + priceOf(name) * q,
+    0,
+  );
 
   return (
     <div className={styles.root}>
@@ -232,10 +253,62 @@ export default function VelaraSite() {
             <button type="button" className={styles.iconBtn} aria-label="Search">
               <SearchGlyph />
             </button>
-            <button type="button" className={styles.iconBtn} aria-label="Cart">
-              <CartGlyph />
-              {cart > 0 && <span className={styles.cartBadge}>{cart}</span>}
-            </button>
+            <div className={styles.cartWrap}>
+              <button
+                type="button"
+                className={styles.iconBtn}
+                aria-label="Cart"
+                onClick={() => setCartOpen((o) => !o)}
+              >
+                <CartGlyph />
+                {count > 0 && <span className={styles.cartBadge}>{count}</span>}
+              </button>
+              {cartOpen && (
+                <div className={styles.cartPop}>
+                  <div className={styles.cartPopHead}>Your bag</div>
+                  {count === 0 ? (
+                    <div className={styles.cartEmpty}>Your bag is empty.</div>
+                  ) : (
+                    <>
+                      <div className={styles.cartItems}>
+                        {Object.entries(cart).map(([name, q]) => (
+                          <div key={name} className={styles.cartItem}>
+                            <div className={styles.cartItemInfo}>
+                              <span className={styles.cartItemName}>{name}</span>
+                              <span className={styles.cartItemMeta}>
+                                £{priceOf(name)} · qty {q}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              className={styles.cartRemove}
+                              aria-label={`Remove one ${name}`}
+                              onClick={() => removeOne(name)}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className={styles.cartSubtotal}>
+                        <span>Subtotal</span>
+                        <span>£{subtotal.toLocaleString()}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.cartCheckout}
+                        onClick={() => {
+                          setCart({});
+                          setCartOpen(false);
+                        }}
+                      >
+                        Checkout
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -310,7 +383,7 @@ export default function VelaraSite() {
                     <button
                       type="button"
                       className={styles.btnAdd}
-                      onClick={addToCart}
+                      onClick={() => addToCart(p.name)}
                     >
                       Add
                     </button>
