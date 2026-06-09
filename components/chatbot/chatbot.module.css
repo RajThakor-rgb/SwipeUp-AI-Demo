@@ -596,8 +596,6 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  position: sticky;
-  top: 12px;
 }
 .browser {
   border: 1px solid var(--line-strong);
@@ -906,4 +904,459 @@
 .chatSend:disabled {
   background: var(--line-strong);
   cursor: default;
+}
+
+/* ============================================================================
+   STRESS TEST  —  scoreboard, result cards, diagnosis, coach
+   ============================================================================ */
+
+.stressPanel {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stressHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.stressTitle {
+  font-family: var(--serif);
+  font-size: 19px;
+  margin: 0;
+  color: var(--ink);
+}
+.attemptBadge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-radius: 999px;
+  padding: 5px 13px;
+}
+.stressIntro {
+  font-size: 13.5px;
+  line-height: 1.58;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.stressActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.stressError {
+  margin: 0;
+  font-size: 13px;
+  color: var(--bad);
+}
+.stressNotice {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  padding: 13px 15px;
+  border-radius: 11px;
+  background: var(--paper);
+  border: 1px dashed var(--line-strong);
+}
+
+/* ---------- Scoreboard tiles ---------------------------------------------- */
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (min-width: 560px) {
+  .scoreboard {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.tile {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 14px 15px 13px;
+}
+.tileTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+.tileValue {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+.tileSuffix {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-left: 1px;
+}
+.tileDelta {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.tileDeltaUp {
+  color: var(--good);
+  background: color-mix(in srgb, var(--good) 12%, var(--paper-2));
+}
+.tileDeltaDown {
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 10%, var(--paper-2));
+}
+.tileLabel {
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+/* ---------- Socratic coach callout ---------------------------------------- */
+
+.coach {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-left: 3px solid var(--accent);
+  border-radius: 13px;
+  padding: 16px 18px;
+}
+.coachMark {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--accent-deep);
+  background: var(--paper-2);
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-top: 2px;
+}
+.coachText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.58;
+  color: var(--accent-deep);
+}
+
+/* ---------- Result cards -------------------------------------------------- */
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.resultCard {
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 15px 16px;
+  background: var(--paper);
+}
+.resultFail {
+  border-color: color-mix(in srgb, var(--bad) 32%, var(--line));
+  background: color-mix(in srgb, var(--bad) 4%, var(--paper));
+}
+.resultHead {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+.verdict {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 999px;
+}
+.verdictPass {
+  color: var(--good);
+  background: color-mix(in srgb, var(--good) 13%, var(--paper-2));
+}
+.verdictFail {
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 12%, var(--paper-2));
+}
+.resultBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.resultRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.resultWho {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+.resultText {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.symptom {
+  margin: 13px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bad) 7%, var(--paper-2));
+  border: 1px solid color-mix(in srgb, var(--bad) 22%, var(--line));
+}
+
+/* ---------- Diagnosis step ------------------------------------------------ */
+
+.diagnose {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line-strong);
+}
+.diagnosePrompt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
+.pillarRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pillarBtn {
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--paper-2);
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.pillarBtn:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.pillarRight {
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 16%, var(--paper-2));
+  color: var(--good);
+  font-weight: 700;
+}
+.pillarWrong {
+  border-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 12%, var(--paper-2));
+  color: var(--bad);
+  font-weight: 700;
+}
+.diagnoseOk {
+  margin: 11px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--accent-deep);
+  padding: 10px 13px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--good) 10%, var(--paper-2));
+}
+.diagnoseNo {
+  margin: 11px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  padding: 10px 13px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bad) 7%, var(--paper-2));
+}
+
+/* ============================================================================
+   REVIEW STAGE  —  first vs best compare, principle, reflection
+   ============================================================================ */
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.reviewTitle {
+  font-family: var(--serif);
+  font-size: 24px;
+  margin: 0 0 18px;
+  color: var(--ink);
+}
+
+.compareWrap {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  padding: 6px 18px 14px;
+}
+.compareCol {
+  display: flex;
+  flex-direction: column;
+}
+.compareHead {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+.compareTagFirst {
+  grid-column: 2;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-align: right;
+}
+.compareTagBest {
+  grid-column: 4;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--accent-deep);
+  text-align: right;
+}
+.compareRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.compareRow:last-child {
+  border-bottom: none;
+}
+.compareLabel {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+.compareFirst {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: right;
+  min-width: 48px;
+}
+.compareArrow {
+  color: var(--line-strong);
+  font-size: 14px;
+}
+.compareBest {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: right;
+  min-width: 48px;
+}
+.compareUp {
+  color: var(--good);
+}
+
+.principlePanel {
+  background: var(--velara);
+  border-radius: 16px;
+  padding: 24px 26px;
+}
+.principleMark {
+  display: inline-block;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.principleText {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.62;
+  color: #ece5d8;
+}
+
+.reflectTitle {
+  font-family: var(--serif);
+  font-size: 18px;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+.reflectQ {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+.reflectInput {
+  width: 100%;
+  min-height: 110px;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  padding: 13px 15px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  resize: vertical;
+  transition: border-color 0.12s ease;
+}
+.reflectInput:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.reflectFoot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.reflectSaved {
+  font-size: 13px;
+  color: var(--accent-deep);
+}
+
+.reviewActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }

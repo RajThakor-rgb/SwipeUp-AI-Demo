@@ -24,26 +24,42 @@ import Builder from "./Builder";
 import ChatbotLearn from "./ChatbotLearn";
 import ChatbotQuiz from "./ChatbotQuiz";
 import ChatWidget from "./ChatWidget";
+import Review from "./Review";
+import StressTest, { type Scoreboard } from "./StressTest";
 import styles from "./chatbot.module.css";
 
-type Stage = "learn" | "quiz" | "build";
+type Stage = "learn" | "quiz" | "build" | "review";
 
 function Stepper({ stage }: { stage: Stage }) {
-  // The quiz is part of Learn, so the visible stepper has two steps.
+  // The quiz is part of Learn, so the visible stepper has three steps.
   const onLearn = stage === "learn" || stage === "quiz";
   const onBuild = stage === "build";
+  const onReview = stage === "review";
+  const learnDone = !onLearn;
+  const buildDone = onReview;
   return (
     <div className={styles.stepper}>
       <div
-        className={`${styles.step} ${onLearn ? styles.stepActive : styles.stepDone}`}
+        className={`${styles.step} ${
+          onLearn ? styles.stepActive : styles.stepDone
+        }`}
       >
-        <span className={styles.stepNum}>{onBuild ? "✓" : "1"}</span>
+        <span className={styles.stepNum}>{learnDone ? "✓" : "1"}</span>
         Learn
       </div>
       <span className={styles.stepConnector} />
-      <div className={`${styles.step} ${onBuild ? styles.stepActive : ""}`}>
-        <span className={styles.stepNum}>2</span>
+      <div
+        className={`${styles.step} ${
+          onBuild ? styles.stepActive : buildDone ? styles.stepDone : ""
+        }`}
+      >
+        <span className={styles.stepNum}>{buildDone ? "✓" : "2"}</span>
         Build
+      </div>
+      <span className={styles.stepConnector} />
+      <div className={`${styles.step} ${onReview ? styles.stepActive : ""}`}>
+        <span className={styles.stepNum}>3</span>
+        Review
       </div>
     </div>
   );
@@ -77,9 +93,35 @@ function ExportPanel({ config }: { config: ChatbotConfig }) {
   );
 }
 
+/** Fallback so Review never crashes if it is reached without a run. */
+const EMPTY_SCORE: Scoreboard = {
+  resolution: 0,
+  hallucinations: 0,
+  escalationAccuracy: 0,
+  csat: 0,
+};
+
+/** Best = highest resolution, breaking ties on fewer hallucinations, then CSAT. */
+function isBetter(candidate: Scoreboard, current: Scoreboard): boolean {
+  if (candidate.resolution !== current.resolution)
+    return candidate.resolution > current.resolution;
+  if (candidate.hallucinations !== current.hallucinations)
+    return candidate.hallucinations < current.hallucinations;
+  return candidate.csat > current.csat;
+}
+
 export default function ChatbotModule({ onHome }: { onHome: () => void }) {
   const [stage, setStage] = useState<Stage>("learn");
   const [config, setConfig] = useState<ChatbotConfig>(DEFAULT_CONFIG);
+
+  // Track the first run and the best run so the review can show the contrast.
+  const [firstScore, setFirstScore] = useState<Scoreboard | null>(null);
+  const [bestScore, setBestScore] = useState<Scoreboard | null>(null);
+
+  const recordRun = (sb: Scoreboard) => {
+    setFirstScore((prev) => prev ?? sb);
+    setBestScore((prev) => (prev === null || isBetter(sb, prev) ? sb : prev));
+  };
 
   return (
     <div className={styles.module}>
@@ -130,10 +172,26 @@ export default function ChatbotModule({ onHome }: { onHome: () => void }) {
                   <ChatWidget config={config} />
                 </div>
               </div>
+
+              <StressTest
+                config={config}
+                onResult={recordRun}
+                onReview={() => setStage("review")}
+              />
+
               <ExportPanel config={config} />
             </div>
           </div>
         </>
+      ) : null}
+
+      {stage === "review" ? (
+        <Review
+          first={firstScore ?? bestScore ?? EMPTY_SCORE}
+          best={bestScore ?? firstScore ?? EMPTY_SCORE}
+          onRestart={() => setStage("build")}
+          onHome={onHome}
+        />
       ) : null}
     </div>
   );

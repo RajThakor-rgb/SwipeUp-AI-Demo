@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import styles from "./VelaraSite.module.css";
 
 // Real, on-brand imagery. Grayscale fashion photos read as premium editorial and
@@ -237,10 +237,73 @@ const TRUST: { glyph: JSX.Element; label: string }[] = [
   { glyph: <LeafGlyph />, label: "Lifetime repairs" },
 ];
 
+// Which section each nav tab and footer link scrolls to.
+const NAV_TARGET: Record<string, string> = {
+  "New In": "collection",
+  "The Autumn Collection": "collection",
+  Sustainability: "sustainability",
+  Boutiques: "contact",
+  About: "sustainability",
+};
+
+const FOOTER: { title: string; links: [string, string][] }[] = [
+  {
+    title: "Shop",
+    links: [
+      ["New In", "collection"],
+      ["The Autumn Collection", "collection"],
+      ["Knitwear", "collection"],
+      ["Outerwear", "collection"],
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      ["About", "sustainability"],
+      ["Sustainability", "sustainability"],
+      ["Boutiques", "contact"],
+      ["Careers", "contact"],
+    ],
+  },
+  {
+    title: "Help",
+    links: [
+      ["Contact", "contact"],
+      ["Shipping", "collection"],
+      ["Repairs", "sustainability"],
+      ["Returns", "contact"],
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      ["Privacy", "contact"],
+      ["Terms", "contact"],
+      ["Cookies", "contact"],
+      ["Modern Slavery", "sustainability"],
+    ],
+  },
+];
+
 export default function VelaraSite() {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [activeNav, setActiveNav] = useState("The Autumn Collection");
   const [cartOpen, setCartOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const scrollToId = (id: string) => {
+    rootRef.current
+      ?.querySelector(`#${id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const filtered = query.trim()
+    ? PRODUCTS.filter((p) =>
+        p.name.toLowerCase().includes(query.trim().toLowerCase()),
+      )
+    : PRODUCTS;
 
   const priceOf = (name: string) => {
     const found = PRODUCTS.find((x) => x.name === name);
@@ -265,7 +328,10 @@ export default function VelaraSite() {
   );
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} ref={rootRef}>
+      <div className={styles.disclaimer}>
+        Demo store · not a real website. Built by SwipeUp AI Academy for this case.
+      </div>
       {/* Sticky top nav */}
       <header className={styles.nav}>
         <div className={styles.navInner}>
@@ -281,7 +347,10 @@ export default function VelaraSite() {
                 className={`${styles.navLink} ${
                   activeNav === link ? styles.navLinkActive : ""
                 }`}
-                onClick={() => setActiveNav(link)}
+                onClick={() => {
+                  setActiveNav(link);
+                  scrollToId(NAV_TARGET[link] ?? "top");
+                }}
               >
                 {link}
               </button>
@@ -289,7 +358,25 @@ export default function VelaraSite() {
           </nav>
 
           <div className={styles.navIcons}>
-            <button type="button" className={styles.iconBtn} aria-label="Search">
+            {searchOpen && (
+              <input
+                className={styles.searchInput}
+                type="search"
+                placeholder="Search the collection"
+                value={query}
+                autoFocus
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            )}
+            <button
+              type="button"
+              className={styles.iconBtn}
+              aria-label="Search"
+              onClick={() => {
+                setSearchOpen((o) => !o);
+                if (searchOpen) setQuery("");
+              }}
+            >
               <SearchGlyph />
             </button>
             <div className={styles.cartWrap}>
@@ -354,7 +441,7 @@ export default function VelaraSite() {
 
       <main className={styles.main}>
         {/* Hero */}
-        <section className={styles.hero}>
+        <section id="top" className={styles.hero}>
           <Img src={HERO_IMG} alt="" className={styles.heroPhoto} />
           <div className={styles.heroMonogram} aria-hidden="true">
             V
@@ -371,10 +458,21 @@ export default function VelaraSite() {
               materials — designed in London, made to be worn for a lifetime.
             </p>
             <div className={styles.heroActions}>
-              <button type="button" className={styles.btnPrimary}>
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={() => scrollToId("collection")}
+              >
                 Explore the collection
               </button>
-              <a href="#" className={styles.textLink}>
+              <a
+                href="#"
+                className={styles.textLink}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToId("sustainability");
+                }}
+              >
                 Read our materials promise
               </a>
             </div>
@@ -392,7 +490,7 @@ export default function VelaraSite() {
         </section>
 
         {/* Product grid */}
-        <section className={styles.collection}>
+        <section id="collection" className={styles.collection}>
           <div className={styles.sectionHead}>
             <span className={styles.eyebrowDark}>Autumn 2025</span>
             <h2 className={styles.sectionTitle}>The Autumn Collection</h2>
@@ -401,8 +499,16 @@ export default function VelaraSite() {
             </p>
           </div>
 
+          {filtered.length === 0 ? (
+            <p className={styles.noResults}>
+              No pieces match “{query}”. Try another search.
+            </p>
+          ) : null}
+
           <div className={styles.grid}>
-            {PRODUCTS.map((p, i) => (
+            {filtered.map((p) => {
+              const i = PRODUCTS.indexOf(p);
+              return (
               <article key={p.name} className={styles.card}>
                 <div
                   className={styles.cardImage}
@@ -431,12 +537,13 @@ export default function VelaraSite() {
                   </div>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </section>
 
         {/* Sustainability band */}
-        <section className={styles.sustain}>
+        <section id="sustainability" className={styles.sustain}>
           <div className={styles.sustainText}>
             <span className={styles.eyebrowGreen}>Sustainability</span>
             <h2 className={styles.sustainTitle}>
@@ -449,7 +556,14 @@ export default function VelaraSite() {
               our studio carbon-neutral. Quiet decisions, made one seam at a
               time.
             </p>
-            <a href="#" className={styles.textLinkDark}>
+            <a
+              href="#"
+              className={styles.textLinkDark}
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToId("contact");
+              }}
+            >
               How we make things
             </a>
           </div>
@@ -460,32 +574,42 @@ export default function VelaraSite() {
         </section>
 
         {/* Newsletter */}
-        <section className={styles.newsletter}>
+        <section id="newsletter" className={styles.newsletter}>
           <div className={styles.newsletterInner}>
             <h2 className={styles.newsletterTitle}>Join the Velara list</h2>
             <p className={styles.newsletterSub}>
               Early access to collections, atelier notes and repair clinics. No
               noise.
             </p>
-            <form
-              className={styles.newsletterForm}
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <input
-                type="email"
-                className={styles.newsletterInput}
-                placeholder="Your email address"
-                aria-label="Email address"
-              />
-              <button type="submit" className={styles.btnSubscribe}>
-                Subscribe
-              </button>
-            </form>
+            {subscribed ? (
+              <p className={styles.newsletterThanks}>
+                Thank you for joining the Velara list.
+              </p>
+            ) : (
+              <form
+                className={styles.newsletterForm}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setSubscribed(true);
+                }}
+              >
+                <input
+                  type="email"
+                  className={styles.newsletterInput}
+                  placeholder="Your email address"
+                  aria-label="Email address"
+                  required
+                />
+                <button type="submit" className={styles.btnSubscribe}>
+                  Subscribe
+                </button>
+              </form>
+            )}
           </div>
         </section>
 
         {/* Footer */}
-        <footer className={styles.footer}>
+        <footer id="contact" className={styles.footer}>
           <div className={styles.footerCols}>
             <div className={styles.footerBrand}>
               <span className={styles.footerWordmark}>VELARA</span>
@@ -493,34 +617,23 @@ export default function VelaraSite() {
                 Sustainable luxury, made in limited runs.
               </p>
             </div>
-            <div className={styles.footerCol}>
-              <h4 className={styles.footerColTitle}>Shop</h4>
-              <a href="#">New In</a>
-              <a href="#">The Autumn Collection</a>
-              <a href="#">Knitwear</a>
-              <a href="#">Outerwear</a>
-            </div>
-            <div className={styles.footerCol}>
-              <h4 className={styles.footerColTitle}>Company</h4>
-              <a href="#">About</a>
-              <a href="#">Sustainability</a>
-              <a href="#">Boutiques</a>
-              <a href="#">Careers</a>
-            </div>
-            <div className={styles.footerCol}>
-              <h4 className={styles.footerColTitle}>Help</h4>
-              <a href="#">Contact</a>
-              <a href="#">Shipping</a>
-              <a href="#">Repairs</a>
-              <a href="#">Returns</a>
-            </div>
-            <div className={styles.footerCol}>
-              <h4 className={styles.footerColTitle}>Legal</h4>
-              <a href="#">Privacy</a>
-              <a href="#">Terms</a>
-              <a href="#">Cookies</a>
-              <a href="#">Modern Slavery</a>
-            </div>
+            {FOOTER.map((col) => (
+              <div className={styles.footerCol} key={col.title}>
+                <h4 className={styles.footerColTitle}>{col.title}</h4>
+                {col.links.map(([label, target]) => (
+                  <a
+                    href="#"
+                    key={label}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scrollToId(target);
+                    }}
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+            ))}
           </div>
           <div className={styles.footerBase}>
             <span>© Velara Ltd. Sustainable luxury, made to last.</span>
