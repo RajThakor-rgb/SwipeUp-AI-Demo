@@ -86,6 +86,8 @@ export interface Judgment {
   metrics: Record<string, MetricDelta>;
   /** Professor-voiced coaching, tied to the analytics result and the frameworks. */
   coach: string;
+  /** A fill-in scaffold for the next prompt (shown when not yet strong). */
+  structure: { label: string; fill: string }[];
 }
 
 export interface GeneratedEmail {

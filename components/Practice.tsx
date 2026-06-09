@@ -155,6 +155,17 @@ export default function Practice() {
               <span className="coach-name">Your AI coach</span>
             </div>
             <div className="coach-text">{latest.judgment.coach}</div>
+            {latest.judgment.structure?.length ? (
+              <div className="coach-structure">
+                <div className="cs-head">Try this shape in your next prompt</div>
+                {latest.judgment.structure.map((s, i) => (
+                  <div className="cs-row" key={i}>
+                    <span className="cs-label">{s.label}</span>
+                    <span className="cs-fill">{s.fill}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             {isStrong ? (
               <div className="coach-win">The market responded. Open your review to see what changed.</div>
             ) : reachedMax ? (

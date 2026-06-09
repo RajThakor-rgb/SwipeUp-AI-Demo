@@ -2341,6 +2341,40 @@ kbd {
   border-top: 1px dashed var(--line-strong);
   padding-top: 9px;
 }
+.coach-structure {
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  padding: 11px 13px;
+}
+.cs-head {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: var(--accent-deep);
+  margin-bottom: 7px;
+}
+.cs-row {
+  display: flex;
+  gap: 9px;
+  padding: 5px 0;
+  border-top: 1px dashed var(--line);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.cs-row:first-of-type {
+  border-top: none;
+}
+.cs-label {
+  flex: 0 0 96px;
+  font-weight: 700;
+  color: var(--velara);
+}
+.cs-fill {
+  color: #43403a;
+}
 .practice-dash {
   background: var(--paper-2);
   border: 1px solid var(--line);

@@ -74,14 +74,19 @@ Judge strictly and consistently against exactly these criteria (0-10 each):
 ${CRITERIA.map((c) => `- ${c.label}: ${c.hint}`).join("\n")}
 
 Then project the impact on three campaign metrics as a delta (change) on each:
-- engagement: campaign engagement score, currently ${METRICS.find((m) => m.id === "engagement")?.value}/100. Range of a single move: roughly -8 to +18.
-- openRate: predicted email open rate %, currently ${METRICS.find((m) => m.id === "openRate")?.value}%. Range: roughly -3 to +9.
-- clickThrough: predicted click-through %, currently ${METRICS.find((m) => m.id === "clickThrough")?.value}%. Range: roughly -0.4 to +1.6.
+- engagement: campaign engagement score, currently ${METRICS.find((m) => m.id === "engagement")?.value}/100.
+- openRate: predicted email open rate %, currently ${METRICS.find((m) => m.id === "openRate")?.value}%.
+- clickThrough: predicted click-through %, currently ${METRICS.find((m) => m.id === "clickThrough")?.value}%.
 
-Rules for the move, do not break them:
-- A weak, generic, or hype-filled email moves the metrics little or DOWN. Never reward effort or length on its own.
-- Only a genuinely on-brand, specific, lapsed-customer-aware email earns a strong lift.
-- Pressing submit must never guarantee a rise. If the email is bad, the numbers fall.
+This is a TEACHING simulator. Calibrate the band and the move like this, and be generous when the student has clearly done the work:
+- WEAK (lazy or generic prompt: no audience, hype words, sale language, exclamation marks): rate "weak" and move DOWN or barely. engagement -6 to +2, openRate -3 to +1, clickThrough -0.4 to +0.2.
+- MIDDLING (some structure, but misses the lapsed bought-once customer, or ignores the constraints): rate "middling". engagement +3 to +8, openRate +1 to +4, clickThrough +0.2 to +0.7.
+- STRONG (clearly applies a framework: names an explicit audience including the lapsed, bought-once-and-drifted customer; sets a tone; sets constraints such as length, no hype, one call to action; and the email is on-brand, specific and speaks to that lapsed customer): rate "strong" and apply a clear, satisfying lift. engagement +12 to +18, openRate +5 to +9, clickThrough +0.9 to +1.6.
+
+Rules you must not break:
+- Reserve "weak" for genuinely lazy prompts. When the student has done the work, reward it as strong.
+- Never reward pure length or effort alone.
+- Pressing submit must never guarantee a rise. A bad prompt still falls.
 - Be consistent: the same email should always earn roughly the same scores.
 
 Set band to "weak", "middling", or "strong" to match the overall quality.
@@ -90,12 +95,16 @@ You are also a supportive professor, not a checker. The student is learning two 
 - Ties the result to the business outcome (e.g. "after we sent this, engagement barely moved" for weak/middling, or "the projections jumped" for strong).
 - For weak or middling, names ONE specific framework element they should add next (for example Audience, Tone, or Narrowing) and what to do with it, then invites them to try again. Guide, never scold.
 - For strong, says what specifically worked and why, so they remember it.
+
+Also return a "structure": a short fill-in scaffold the student can copy into their NEXT prompt. For weak or middling, give 3 or 4 items, each a framework element with a concrete suggestion for THIS task (the Velara autumn email to a lapsed customer). For strong, return an empty array [].
+
 Do not use em dashes. Address the student as "you".
 
 Return ONLY a JSON object. No commentary, no markdown, no code fences. Exactly this shape:
 {
   "band": "weak" | "middling" | "strong",
   "coach": "<2-3 sentence professor message as described>",
+  "structure": [ { "label": "<framework element, e.g. Audience>", "fill": "<concrete suggestion for this task>" } ],
   "criteria": {
     ${CRITERIA.map((c) => `"${c.id}": { "score": <integer 0-10>, "reason": "<one short line>" }`).join(",\n    ")}
   },
@@ -266,5 +275,29 @@ function normalizeJudgment(raw: Judgment): Judgment {
       ? raw.coach.trim()
       : fallbackCoach[band];
 
-  return { band, criteria, metrics, coach };
+  // A fill-in scaffold for the next prompt. Empty for strong; a sensible default
+  // for weak/middling if the model didn't supply one.
+  const fallbackStructure =
+    band === "strong"
+      ? []
+      : [
+          { label: "Audience", fill: "a client who bought one piece over a year ago and then went quiet" },
+          { label: "Tone", fill: "warm, understated, sincere, no hype" },
+          { label: "What to avoid", fill: "exclamation marks, sale language, phrases like 'don't miss out'" },
+          { label: "Format", fill: "a subject under 8 words and a body under 110 words with one quiet call to action" },
+        ];
+  const structure =
+    band === "strong"
+      ? []
+      : Array.isArray(raw?.structure) && raw.structure.length
+        ? raw.structure
+            .filter((s: unknown): s is { label: unknown; fill: unknown } => !!s && typeof s === "object")
+            .map((s: { label: unknown; fill: unknown }) => ({
+              label: typeof s.label === "string" ? s.label : "",
+              fill: typeof s.fill === "string" ? s.fill : "",
+            }))
+            .filter((s: { label: string; fill: string }) => s.label && s.fill)
+        : fallbackStructure;
+
+  return { band, criteria, metrics, coach, structure };
 }
