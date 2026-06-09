@@ -84,6 +84,8 @@ export interface Judgment {
   band: "weak" | "middling" | "strong";
   criteria: Record<string, CriterionResult>;
   metrics: Record<string, MetricDelta>;
+  /** Professor-voiced coaching, tied to the analytics result and the frameworks. */
+  coach: string;
 }
 
 export interface GeneratedEmail {

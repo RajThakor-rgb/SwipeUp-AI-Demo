@@ -86,9 +86,16 @@ Rules for the move, do not break them:
 
 Set band to "weak", "middling", or "strong" to match the overall quality.
 
+You are also a supportive professor, not a checker. The student is learning two prompt frameworks, CO-STAR (Context, Objective, Style, Tone, Audience, Response) and RISEN (Role, Instructions, Steps, End goal, Narrowing). Write a "coach" message of 2 to 3 sentences in a warm, encouraging tutor's voice that:
+- Ties the result to the business outcome (e.g. "after we sent this, engagement barely moved" for weak/middling, or "the projections jumped" for strong).
+- For weak or middling, names ONE specific framework element they should add next (for example Audience, Tone, or Narrowing) and what to do with it, then invites them to try again. Guide, never scold.
+- For strong, says what specifically worked and why, so they remember it.
+Do not use em dashes. Address the student as "you".
+
 Return ONLY a JSON object. No commentary, no markdown, no code fences. Exactly this shape:
 {
   "band": "weak" | "middling" | "strong",
+  "coach": "<2-3 sentence professor message as described>",
   "criteria": {
     ${CRITERIA.map((c) => `"${c.id}": { "score": <integer 0-10>, "reason": "<one short line>" }`).join(",\n    ")}
   },
@@ -247,5 +254,17 @@ function normalizeJudgment(raw: Judgment): Judgment {
     };
   }
 
-  return { band, criteria, metrics };
+  const fallbackCoach: Record<Judgment["band"], string> = {
+    weak: "Good effort, but after we sent this the analytics barely moved. Try giving the AI an Audience and a Tone using CO-STAR, then run it again and watch the market respond.",
+    middling:
+      "Better. It is starting to land, but the lift is small. Add Narrowing from RISEN, the things to avoid and a tighter length, and let's see how the numbers move.",
+    strong:
+      "This is the level. You gave the AI a clear audience, tone and constraints, and the projections jumped. That is prompt engineering working for the business.",
+  };
+  const coach =
+    typeof raw?.coach === "string" && raw.coach.trim()
+      ? raw.coach.trim()
+      : fallbackCoach[band];
+
+  return { band, criteria, metrics, coach };
 }

@@ -17,10 +17,7 @@ export default function Lock() {
 
   function unlock() {
     setEntering(true);
-    setTimeout(() => {
-      dispatch({ type: "SET_SCREEN", value: "desktop" });
-      setTimeout(() => dispatch({ type: "SHOW_NOTIFICATION" }), 1300);
-    }, 650);
+    setTimeout(() => dispatch({ type: "ENTER_APP" }), 650);
   }
 
   useEffect(() => {
