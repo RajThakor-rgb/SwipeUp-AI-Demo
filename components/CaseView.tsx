@@ -89,21 +89,16 @@ export default function CaseView() {
       </div>
 
       {showSite ? (
-        <div className="sitepeek-overlay" onClick={() => setShowSite(false)}>
-          <div className="sitepeek" onClick={(e) => e.stopPropagation()}>
+        <div className="sitepeek-overlay">
+          <div className="sitepeek">
             <div className="sitepeek-bar">
-              <div className="sitepeek-dots">
-                <span />
-                <span />
-                <span />
-              </div>
               <div className="sitepeek-url">velara.com</div>
               <button
                 className="sitepeek-close"
                 onClick={() => setShowSite(false)}
-                aria-label="Close"
+                aria-label="Close website"
               >
-                ✕
+                ✕ Close
               </button>
             </div>
             <div className="sitepeek-stage">

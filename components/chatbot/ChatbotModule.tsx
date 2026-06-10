@@ -10,7 +10,7 @@
 //             ChatWidget overlaid (right) + an export panel for the compiled
 //             system prompt, the portable artifact the student leaves with.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import VelaraSite from "@/components/VelaraSite";
 import { COPY } from "@/config/chatbot";
@@ -118,6 +118,12 @@ export default function ChatbotModule({ onHome }: { onHome: () => void }) {
   const [firstScore, setFirstScore] = useState<Scoreboard | null>(null);
   const [bestScore, setBestScore] = useState<Scoreboard | null>(null);
 
+  // Each stage (learn, quiz, build, review) should open at the top rather than
+  // inheriting the scroll position of the previous, often longer, stage.
+  useEffect(() => {
+    document.querySelector(".app-main")?.scrollTo({ top: 0 });
+  }, [stage]);
+
   const recordRun = (sb: Scoreboard) => {
     setFirstScore((prev) => prev ?? sb);
     setBestScore((prev) => (prev === null || isBetter(sb, prev) ? sb : prev));
@@ -160,11 +166,6 @@ export default function ChatbotModule({ onHome }: { onHome: () => void }) {
             <div className={styles.previewCol}>
               <div className={styles.browser}>
                 <div className={styles.browserBar}>
-                  <div className={styles.browserDots}>
-                    <span className={styles.browserDot} />
-                    <span className={styles.browserDot} />
-                    <span className={styles.browserDot} />
-                  </div>
                   <div className={styles.browserUrl}>velara.com</div>
                 </div>
                 <div className={styles.previewStage}>

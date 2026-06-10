@@ -1624,6 +1624,22 @@ kbd {
   color: rgba(255, 255, 255, 0.55);
   font-variant-numeric: tabular-nums;
 }
+.ab-logoff {
+  margin-left: 4px;
+  padding: 6px 13px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.ab-logoff:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.45);
+}
 .app-main {
   flex: 1;
   overflow-y: auto;
@@ -2579,42 +2595,24 @@ kbd {
   position: fixed;
   inset: 0;
   z-index: 1100;
-  background: rgba(8, 10, 14, 0.7);
-  backdrop-filter: blur(6px);
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  background: var(--paper-2);
   animation: fade 0.2s ease;
 }
 .sitepeek {
-  width: min(1120px, 95vw);
-  height: 86vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--paper-2);
-  border: 1px solid var(--line-strong);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
 }
 .sitepeek-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 11px 18px;
   background: var(--paper);
   border-bottom: 1px solid var(--line);
   flex: 0 0 auto;
-}
-.sitepeek-dots {
-  display: flex;
-  gap: 6px;
-}
-.sitepeek-dots span {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--line-strong);
 }
 .sitepeek-url {
   flex: 1;
@@ -2627,17 +2625,23 @@ kbd {
   text-align: center;
 }
 .sitepeek-close {
-  width: 30px;
-  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
   border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--paper-2);
-  color: var(--ink-soft);
+  border: 1px solid var(--line-strong);
+  background: var(--velara);
+  color: #fff;
   font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 0 0 auto;
 }
 .sitepeek-close:hover {
-  background: var(--accent-soft);
-  color: var(--velara);
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
 }
 .sitepeek-stage {
   flex: 1;

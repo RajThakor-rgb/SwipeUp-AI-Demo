@@ -9,9 +9,18 @@
 // which runs a guided lesson: learn -> quiz gate -> practice -> consolidate.
 // ============================================================================
 
-import React, { createContext, useContext, useReducer } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 import { METRICS } from "@/config/case";
 import type { Attempt } from "@/lib/types";
+
+// Where the session is persisted so a student can log off and resume later.
+const STORAGE_KEY = "swipeup.session.v1";
 
 export type Screen = "portal" | "boot" | "lock" | "app";
 export type View = "home" | "case" | "module" | "chatbot";
@@ -46,6 +55,8 @@ const initialState: State = {
 export type Action =
   | { type: "SET_SCREEN"; value: Screen }
   | { type: "ENTER_APP" }
+  | { type: "LOG_OFF" }
+  | { type: "HYDRATE"; value: Partial<State> }
   | { type: "SET_VIEW"; value: View }
   | { type: "OPEN_MODULE" }
   | { type: "SET_STAGE"; value: Stage }
@@ -59,7 +70,18 @@ function reducer(state: State, action: Action): State {
       return { ...state, screen: action.value };
 
     case "ENTER_APP":
-      return { ...state, screen: "app", view: "home" };
+      // Keep whatever view the student was last on, so logging back in resumes
+      // them where they stopped. On a first login the view is already "home".
+      return { ...state, screen: "app" };
+
+    case "LOG_OFF":
+      // Return to the lock screen but keep all progress; localStorage retains
+      // it so the next sign-in lands back on the same view.
+      return { ...state, screen: "lock" };
+
+    case "HYDRATE":
+      // Restore a saved session, tolerating older or partial saved shapes.
+      return { ...initialState, ...action.value };
 
     case "SET_VIEW":
       return { ...state, view: action.value };
@@ -105,6 +127,34 @@ export function WorkstationProvider({
   children: React.ReactNode;
 }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Load any saved session once, on the client. We hydrate in an effect (not
+  // during render) so the server and first client render match.
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved) dispatch({ type: "HYDRATE", value: JSON.parse(saved) });
+    } catch {
+      /* corrupt or unavailable storage, start fresh */
+    }
+    setHydrated(true);
+  }, []);
+
+  // Persist every change so progress survives a log off, refresh, or close.
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      /* storage may be full or blocked, carry on */
+    }
+  }, [state, hydrated]);
+
+  // Hold rendering until the saved session is restored, so a returning student
+  // never sees a flash of the portal before resuming.
+  if (!hydrated) return null;
+
   return (
     <StateContext.Provider value={{ state, dispatch }}>
       {children}
