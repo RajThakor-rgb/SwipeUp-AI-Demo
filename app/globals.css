@@ -197,6 +197,79 @@ kbd {
   color: rgba(255, 255, 255, 0.4);
 }
 
+/* ==============================  SPLASH  ================================ */
+.splash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(900px 620px at 50% 18%, #1b1f29, #0a0c10 70%);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+.splash-out {
+  opacity: 0;
+  filter: blur(10px);
+}
+.splash-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  animation: splashIn 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.splash-logo {
+  width: 84px;
+  height: 84px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-size: 44px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(140deg, var(--accent), var(--accent-deep));
+  box-shadow: 0 24px 60px -22px rgba(154, 123, 79, 0.7);
+}
+.splash-name {
+  font-family: var(--serif);
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.splash-name em {
+  font-style: normal;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+}
+.splash-tag {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.4px;
+}
+.splash-foot {
+  position: absolute;
+  bottom: 38px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes splashIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* ===============================  BOOT  ================================== */
 .boot {
   position: fixed;

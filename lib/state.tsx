@@ -22,12 +22,15 @@ import type { Attempt } from "@/lib/types";
 // Where the session is persisted so a student can log off and resume later.
 const STORAGE_KEY = "swipeup.session.v1";
 
-export type Screen = "portal" | "boot" | "lock" | "app";
+export type Screen = "splash" | "portal" | "boot" | "lock" | "app";
 export type View = "home" | "case" | "module" | "chatbot";
 export type Stage = "learn" | "quiz" | "practice" | "consolidate";
 
 export interface State {
   screen: Screen;
+  // Where the splash hands off to once it finishes (the resumed screen for a
+  // returning student, or the portal for a new one).
+  resumeScreen?: Screen;
   view: View;
   stage: Stage;
   quizPassed: boolean;
@@ -42,7 +45,7 @@ const initialMetrics: Record<string, number> = Object.fromEntries(
 );
 
 const initialState: State = {
-  screen: "portal",
+  screen: "splash",
   view: "home",
   stage: "learn",
   quizPassed: false,
@@ -56,6 +59,7 @@ export type Action =
   | { type: "SET_SCREEN"; value: Screen }
   | { type: "ENTER_APP" }
   | { type: "LOG_OFF" }
+  | { type: "END_SPLASH" }
   | { type: "HYDRATE"; value: Partial<State> }
   | { type: "SET_VIEW"; value: View }
   | { type: "OPEN_MODULE" }
@@ -79,9 +83,24 @@ function reducer(state: State, action: Action): State {
       // it so the next sign-in lands back on the same view.
       return { ...state, screen: "lock" };
 
-    case "HYDRATE":
-      // Restore a saved session, tolerating older or partial saved shapes.
-      return { ...initialState, ...action.value };
+    case "END_SPLASH":
+      // Leave the splash for the portal (new visitor) or the resumed screen.
+      return {
+        ...state,
+        screen: state.resumeScreen ?? "portal",
+        resumeScreen: undefined,
+      };
+
+    case "HYDRATE": {
+      // Restore a saved session, tolerating older or partial saved shapes, but
+      // always lead with the splash and remember where to hand off afterwards.
+      const saved = { ...initialState, ...action.value };
+      const target =
+        saved.screen === "splash"
+          ? saved.resumeScreen ?? "portal"
+          : saved.screen;
+      return { ...saved, screen: "splash", resumeScreen: target };
+    }
 
     case "SET_VIEW":
       return { ...state, view: action.value };
